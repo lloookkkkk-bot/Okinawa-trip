@@ -2,146 +2,195 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Okinawa Travel Planner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>My Okinawa Planner</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; }
-        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        body { font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body>
-    <div id="app" class="max-w-md mx-auto bg-slate-50 min-h-screen shadow-2xl relative flex flex-col">
+<body class="bg-slate-100">
+    <div id="app" class="max-w-md mx-auto min-h-screen bg-slate-50 shadow-xl flex flex-col relative pb-20">
         
-        <!-- Header -->
-        <header class="bg-blue-600 text-white p-6 rounded-b-3xl shadow-lg">
-            <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold tracking-tight">沖繩．萬座毛之行</h1>
-                <span class="bg-blue-400/30 px-3 py-1 rounded-full text-xs">Ready to fly ✈️</span>
+        <!-- Header: 可編輯旅程名稱 -->
+        <header class="bg-gradient-to-br from-blue-600 to-blue-400 text-white p-6 rounded-b-[2rem] shadow-lg">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex-1">
+                    <input v-model="tripName" class="bg-transparent text-2xl font-bold border-b border-transparent focus:border-white/50 outline-none w-full" placeholder="輸入旅程名稱">
+                    <p class="text-blue-100 text-xs mt-1">點擊上方文字可編輯名稱 ✎</p>
+                </div>
             </div>
             
-            <div class="flex gap-4 items-center bg-white/10 p-3 rounded-2xl backdrop-blur-md">
-                <div class="flex-1">
-                    <p class="text-blue-100 text-xs">出發日期</p>
-                    <input type="date" v-model="startDate" class="bg-transparent font-medium focus:outline-none w-full">
+            <div class="flex gap-4 items-center bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/20">
+                <div class="flex-1 text-center">
+                    <p class="text-blue-50 text-[10px] uppercase font-bold tracking-wider">Start</p>
+                    <input type="date" v-model="startDate" class="bg-transparent text-sm font-medium focus:outline-none w-full text-center">
                 </div>
-                <div class="h-8 w-px bg-blue-300/30"></div>
-                <div class="flex-1">
-                    <p class="text-blue-100 text-xs">回程日期</p>
-                    <input type="date" v-model="endDate" class="bg-transparent font-medium focus:outline-none w-full">
+                <div class="h-6 w-px bg-white/30"></div>
+                <div class="flex-1 text-center">
+                    <p class="text-blue-50 text-[10px] uppercase font-bold tracking-wider">End</p>
+                    <input type="date" v-model="endDate" class="bg-transparent text-sm font-medium focus:outline-none w-full text-center">
                 </div>
             </div>
         </header>
 
-        <!-- Weather Report Widget -->
-        <section class="p-4 mt-2">
-            <div class="bg-gradient-to-r from-cyan-400 to-blue-500 rounded-2xl p-4 text-white flex justify-between items-center shadow-md">
-                <div>
-                    <p class="text-sm opacity-90">今日沖繩天氣 (預測)</p>
-                    <p class="text-2xl font-bold">28°C / 晴天</p>
-                    <p class="text-xs mt-1">適合浮潛，紫外線偏強</p>
+        <!-- 動態天氣報告 -->
+        <section class="p-4">
+            <div :class="weatherTheme" class="rounded-3xl p-5 text-white shadow-inner transition-all duration-500">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-medium opacity-80">{{ todayStr }} 沖繩天氣</p>
+                        <h3 class="text-3xl font-bold my-1">{{ weather.temp }}°C / {{ weather.status }}</h3>
+                    </div>
+                    <div class="text-5xl">{{ weather.icon }}</div>
                 </div>
-                <div class="text-4xl">☀️</div>
+                <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-white/20 text-center">
+                    <div>
+                        <p class="text-[10px] opacity-70">降雨機率</p>
+                        <p class="font-bold text-sm">{{ weather.rain }}%</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] opacity-70">濕度</p>
+                        <p class="font-bold text-sm">{{ weather.humidity }}%</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] opacity-70">紫外線</p>
+                        <p class="font-bold text-sm">{{ weather.uv }}</p>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Itinerary List -->
-        <main class="flex-1 px-4 pb-24 overflow-y-auto">
+        <!-- 行程列表 -->
+        <main class="flex-1 px-4">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold text-slate-700">行程安排</h2>
-                <button @click="addPlan" class="bg-blue-100 text-blue-600 p-2 rounded-full hover:bg-blue-200 transition">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-5 h-5 text-blue-500"></i> 行程清單
+                </h2>
+                <button @click="addPlan" class="bg-blue-500 text-white p-2 rounded-xl shadow-md active:scale-95 transition">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div v-if="itineraries.length === 0" class="text-center py-10 text-slate-400">
-                目前沒有行程，點擊右上角新增
-            </div>
-
-            <div v-for="(item, index) in itineraries" :key="index" class="mb-4 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 group">
-                <div class="flex justify-between items-start mb-2">
-                    <input type="time" v-model="item.time" class="text-blue-600 font-bold bg-transparent outline-none">
-                    <button @click="removePlan(index)" class="text-slate-300 hover:text-red-400">
-                        <i data-lucide="x" class="w-4 h-4"></i>
+            <div v-for="(item, index) in itineraries" :key="index" class="mb-4 bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
+                        <i data-lucide="clock" class="w-3 h-3 text-blue-600"></i>
+                        <input type="time" v-model="item.time" class="bg-transparent text-blue-600 text-xs font-bold outline-none">
+                    </div>
+                    <button @click="removePlan(index)" class="text-slate-300 hover:text-red-400 p-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>
                 
-                <input v-model="item.location" placeholder="輸入地點，如：美麗海水族館" 
-                       class="w-full text-lg font-medium text-slate-800 border-b border-transparent focus:border-blue-200 outline-none mb-2">
+                <input v-model="item.location" placeholder="要去哪裡？" 
+                       class="w-full text-lg font-bold text-slate-700 placeholder:text-slate-300 outline-none mb-3 px-1 border-b-2 border-transparent focus:border-blue-100 transition">
                 
                 <div class="flex gap-2">
-                    <button @click="openMap(item.location)" class="flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition">
-                        <i data-lucide="map-pin" class="w-3 h-3"></i> 地圖導航
-                    </button>
-                    <button class="flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-200">
-                        <i data-lucide="info" class="w-3 h-3"></i> 備註
+                    <button @click="openSingleMap(item.location)" class="flex-1 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-medium flex items-center justify-center gap-2 hover:bg-blue-50 hover:text-blue-600 transition">
+                        <i data-lucide="navigation" class="w-3 h-3"></i> 導航此點
                     </button>
                 </div>
             </div>
         </main>
 
-        <!-- Tab Bar -->
-        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-lg border-t border-slate-200 flex justify-around p-4 safe-area-bottom shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-            <button class="flex flex-col items-center text-blue-600">
-                <i data-lucide="calendar" class="w-6 h-6"></i>
-                <span class="text-[10px] mt-1 font-bold">行程</span>
-            </button>
-            <button class="flex flex-col items-center text-slate-400 hover:text-blue-500">
-                <i data-lucide="map" class="w-6 h-6"></i>
-                <span class="text-[10px] mt-1">地圖</span>
-            </button>
-            <button class="flex flex-col items-center text-slate-400 hover:text-blue-500">
-                <i data-lucide="camera" class="w-6 h-6"></i>
-                <span class="text-[10px] mt-1">回憶</span>
-            </button>
-            <button class="flex flex-col items-center text-slate-400 hover:text-blue-500">
-                <i data-lucide="user" class="w-6 h-6"></i>
-                <span class="text-[10px] mt-1">設定</span>
+        <!-- 底部導航欄 -->
+        <nav class="fixed bottom-4 left-4 right-4 max-w-md mx-auto glass-card rounded-2xl border border-white shadow-2xl flex justify-around p-3">
+            <button @click="openMultiMap" class="flex flex-col items-center gap-1 group">
+                <div class="p-2 bg-blue-600 rounded-xl shadow-lg group-active:scale-90 transition">
+                    <i data-lucide="map" class="w-6 h-6 text-white"></i>
+                </div>
+                <span class="text-[10px] font-bold text-blue-600">一鍵導航全行程</span>
             </button>
         </nav>
     </div>
 
     <script>
-        const { createApp, ref, onMounted, nextTick } = Vue;
+        const { createApp, ref, onMounted, computed, watch } = Vue;
 
         createApp({
             setup() {
+                const tripName = ref('沖繩自駕之旅');
                 const startDate = ref('2026-06-15');
                 const endDate = ref('2026-06-20');
                 const itineraries = ref([
-                    { time: '09:00', location: '那霸機場 (OKA)' },
-                    { time: '11:30', location: '首里城' },
-                    { time: '14:00', location: '國際通美食街' }
+                    { time: '09:00', location: '那霸機場' },
+                    { time: '14:00', location: '美麗海水族館' },
+                    { time: '18:00', location: '美國村' }
                 ]);
+
+                // 模擬動態天氣邏輯
+                const weather = ref({ temp: 28, status: '晴天', icon: '☀️', rain: 10, humidity: 65, uv: '高' });
+                
+                const updateWeather = () => {
+                    const statuses = [
+                        { s: '晴天', i: '☀️', t: [28, 32], r: [0, 10], h: [60, 70], u: '極高' },
+                        { s: '多雲', i: '☁️', t: [25, 27], r: [10, 30], h: [70, 80], u: '中' },
+                        { s: '陣雨', i: '🌧️', t: [23, 25], r: [60, 90], h: [85, 95], u: '低' }
+                    ];
+                    const rand = Math.floor(Math.random() * statuses.length);
+                    const pick = statuses[rand];
+                    weather.value = {
+                        status: pick.s, icon: pick.i,
+                        temp: Math.floor(Math.random() * (pick.t[1] - pick.t[0]) + pick.t[0]),
+                        rain: Math.floor(Math.random() * (pick.r[1] - pick.r[0]) + pick.r[0]),
+                        humidity: Math.floor(Math.random() * (pick.h[1] - pick.h[0]) + pick.h[0]),
+                        uv: pick.u
+                    };
+                };
+
+                const weatherTheme = computed(() => {
+                    if (weather.value.rain > 50) return 'bg-gradient-to-br from-slate-600 to-slate-400';
+                    if (weather.value.temp > 30) return 'bg-gradient-to-br from-orange-500 to-yellow-400';
+                    return 'bg-gradient-to-br from-cyan-500 to-blue-500';
+                });
+
+                const todayStr = computed(() => new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric' }));
 
                 const addPlan = () => {
                     itineraries.value.push({ time: '12:00', location: '' });
-                    nextTick(() => {
-                        lucide.createIcons();
-                    });
+                    setTimeout(() => lucide.createIcons(), 0);
                 };
 
-                const removePlan = (index) => {
-                    itineraries.value.splice(index, 1);
+                const removePlan = (index) => { itineraries.value.splice(index, 1); };
+
+                // 單點導航
+                const openSingleMap = (loc) => {
+                    if (!loc) return alert('請輸入地點');
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`, '_blank');
                 };
 
-                const openMap = (location) => {
-                    if(!location) return alert('請先輸入地點名稱');
-                    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+                // 行程全釘選 (Google Maps Multi-point)
+                const openMultiMap = () => {
+                    const locations = itineraries.value
+                        .map(i => i.location)
+                        .filter(l => l.length > 0);
+                    
+                    if (locations.length === 0) return alert('清單中沒有地點');
+                    
+                    // 使用 Google Maps Directions 模式
+                    // origin: 目前位置, destination: 最後一個點, waypoints: 中間所有的點
+                    const origin = "My+Location";
+                    const dest = encodeURIComponent(locations[locations.length - 1]);
+                    const waypoints = locations.slice(0, -1).map(l => encodeURIComponent(l)).join('|');
+                    
+                    const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&waypoints=${waypoints}&travelmode=driving`;
                     window.open(url, '_blank');
                 };
 
                 onMounted(() => {
                     lucide.createIcons();
+                    updateWeather();
                 });
 
                 return {
-                    startDate, endDate, itineraries,
-                    addPlan, removePlan, openMap
-                }
+                    tripName, startDate, endDate, itineraries, weather, todayStr, weatherTheme,
+                    addPlan, removePlan, openSingleMap, openMultiMap
+                };
             }
         }).mount('#app');
     </script>
