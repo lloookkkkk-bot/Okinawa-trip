@@ -192,10 +192,13 @@
                 const loadingWeather = ref(true);
 
                 const totalDays = computed(() => {
-                    const start = new Date(startDate.value);
-                    const end = new Date(endDate.value);
-                    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
-                });
+    if (!startDate.value || !endDate.value) return 1;
+    const start = new Date(startDate.value);
+    const end = new Date(endDate.value);
+    const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    return diff > 0 ? diff : 1;
+});
+
 
                 watch(totalDays, (newVal) => { if (selectedDay.value > newVal) selectedDay.value = 1; });
 
@@ -252,11 +255,14 @@
                     lucide.createIcons();
                 });
 
-                return {
-                    currentTab, selectedDay, tripName, startDate, endDate, totalDays, selectedDay, setDay, currentDayLabel,
-                    itineraries, filteredItineraries, expenses, totalExpensesHKD, getCatTotal,
-                    loadingWeather, dayWeather, setTab, addPlan, removePlan, addExpense, openMap, exchangeRate, wishTab, spots, wishlistItems, addWishItem
+                                return {
+                    currentTab, setTab, tripName, startDate, endDate, selectedDay, totalDays, setDay,
+                    currentDayLabel, itineraries, filteredItineraries, addPlan, removePlan, openMap,
+                    expenses, exchangeRate, totalExpensesHKD, getCatTotal, addExpense,
+                    wishTab, spots,wishlistItems, addWishItem,
+                    loadingWeather, dayWeather
                 };
+
             }
         }).mount('#app');
     </script>
