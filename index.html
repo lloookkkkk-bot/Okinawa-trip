@@ -67,11 +67,13 @@
                             <input v-model="item.location" placeholder="輸入地點..." class="w-full text-base font-bold outline-none mb-1">
                             <div class="flex gap-4">
                                 <button @click="openMap(item.location)" class="text-[10px] text-slate-400 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i>導航</button>
-                                <button @click="removePlan(index)" class="text-[10px] text-red-200 flex items-center gap-1"><i data-lucide="trash" class="w-3 h-3"></i>刪除</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                 <button @click="removePlan(item)" class="text-[10px] text-red-200 flex items-center gap-1">
+                    <i data-lucide="trash" class="w-3 h-3"></i>刪除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
             </main>
         </div>
 
@@ -241,7 +243,13 @@
 
                 const setTab = (t) => { currentTab.value = t; nextTick(() => lucide.createIcons()); };
                 const addPlan = () => { itineraries.value.push({ day: selectedDay.value, time: '12:00', location: '' }); nextTick(() => lucide.createIcons()); };
-                const removePlan = (idx) => { itineraries.value.splice(itineraries.value.indexOf(filteredItineraries.value[idx]), 1); };
+                const removePlan = (item) => {
+    const index = itineraries.value.indexOf(item);
+    if (index > -1) {
+        itineraries.value.splice(index, 1);
+    }
+};
+
                 const addExpense = () => { expenses.value.unshift({ category: '食物', name: '', amount: null }); nextTick(() => lucide.createIcons()); };
                 const openMap = (loc) => loc && window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc + ' 沖繩')}`, '_blank');
 
