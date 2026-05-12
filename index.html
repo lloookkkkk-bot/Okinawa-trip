@@ -9,11 +9,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans JP', sans-serif; background: #f8fafc; }
+        body { font-family: 'Noto Sans JP', sans-serif; background: #f8fafc; margin: 0; padding: 0; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        /* 磨砂玻璃效果 */
         .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
-        /* 激活的天數卡片樣式 */
         .day-card-active { background: #0d9488; color: white; transform: scale(1.05); box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2); }
         .animate-fade { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -22,22 +20,18 @@
 <body class="text-slate-800">
     <div id="app" class="max-w-md mx-auto min-h-screen relative pb-32">
 
-        <!-- 行程頁面主體 -->
+        <!-- ================= 分頁 1: 行程 ================= -->
         <div v-if="currentTab === 'itinerary'" class="animate-fade">
             <header class="p-6 pt-12 bg-white sticky top-0 z-40 shadow-sm">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex-1 mr-4">
-                        <!-- 旅程標題 -->
-                        <input v-model="tripName" placeholder="輸入旅程名稱 (如: 沖繩自駕遊)" class="text-2xl font-bold text-teal-900 bg-transparent outline-none w-full border-b border-teal-50">
-                        <!-- 日期選擇 -->
+                        <input v-model="tripName" placeholder="點擊命名旅程" class="text-2xl font-bold text-teal-900 bg-transparent outline-none w-full border-b border-teal-50">
                         <div class="flex items-center gap-1 mt-2">
                             <input type="date" v-model="startDate" class="text-[10px] bg-slate-50 p-1 rounded text-teal-700 outline-none">
                             <span class="text-[10px] text-slate-400">至</span>
                             <input type="date" v-model="endDate" class="text-[10px] bg-slate-50 p-1 rounded text-teal-700 outline-none">
                         </div>
                     </div>
-                    
-                    <!-- 天氣 Widget -->
                     <div class="bg-teal-50 p-2 px-3 rounded-2xl flex flex-col items-center min-w-[70px] border border-teal-100">
                         <div v-if="loadingWeather" class="text-[8px] animate-pulse">連線中...</div>
                         <template v-else-if="dayWeather">
@@ -48,11 +42,8 @@
                             </div>
                             <span class="text-[8px] text-teal-500 font-medium">降雨 {{ Math.round(dayWeather.rain) }}%</span>
                         </template>
-                        <div v-else class="text-[8px] text-slate-300 italic">待更新</div>
                     </div>
                 </div>
-
-                <!-- 橫向天數選單 -->
                 <div class="flex gap-3 overflow-x-auto no-scrollbar py-2">
                     <div v-for="n in totalDays" :key="n" @click="selectedDay = n"
                          :class="selectedDay === n ? 'day-card-active' : 'bg-slate-50 text-slate-400'"
@@ -62,166 +53,102 @@
                     </div>
                 </div>
             </header>
-
             <main class="p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ currentDayLabel }} 行程</h2>
-                    <button @click="addPlan" class="bg-teal-600 text-white p-2 rounded-full shadow-lg active:scale-95 transition-transform">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                    </button>
+                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ currentDayLabel }} 行程表</h2>
+                    <button @click="addPlan" class="bg-teal-600 text-white p-2 rounded-full shadow-lg active:scale-90"><i data-lucide="plus" class="w-4 h-4"></i></button>
                 </div>
-                
-                <!-- 行程列表內容 -->
                 <div class="space-y-4">
                     <div v-for="(item, index) in filteredItineraries" :key="index" class="bg-white p-4 rounded-3xl shadow-sm border border-slate-50 flex items-start gap-4 animate-fade">
                         <input type="time" v-model="item.time" class="text-sm font-bold text-teal-600 pt-1 outline-none bg-transparent">
                         <div class="flex-1">
-                            <input v-model="item.location" placeholder="地點或行程描述..." class="w-full text-base font-bold outline-none mb-1 bg-transparent">
+                            <input v-model="item.location" placeholder="輸入地點..." class="w-full text-base font-bold outline-none mb-1">
                             <div class="flex gap-4">
-                                <button @click="openMap(item.location)" class="text-[10px] text-slate-400 flex items-center gap-1 hover:text-teal-600">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i>導航
-                                </button>
-                                <button @click="removePlan(index)" class="text-[10px] text-red-200 flex items-center gap-1 hover:text-red-400">
-                                    <i data-lucide="trash" class="w-3 h-3"></i>刪除
-                                </button>
+                                <button @click="openMap(item.location)" class="text-[10px] text-slate-400 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i>導航</button>
+                                <button @click="removePlan(index)" class="text-[10px] text-red-200 flex items-center gap-1"><i data-lucide="trash" class="w-3 h-3"></i>刪除</button>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- 全空白時的提示 -->
-                    <div v-if="filteredItineraries.length === 0" class="text-center py-20">
-                        <div class="text-slate-200 mb-2"><i data-lucide="map" class="w-12 h-12 mx-auto opacity-20"></i></div>
-                        <p class="text-slate-300 text-xs italic">尚未加入行程，點擊上方 + 號開始</p>
                     </div>
                 </div>
             </main>
         </div>
 
-        <!-- ================= PART 2: 記帳頁面 ================= -->
+        <!-- ================= 分頁 2: 記帳 ================= -->
         <div v-if="currentTab === 'finance'" class="p-6 pt-12 animate-fade">
             <h2 class="text-2xl font-bold text-teal-900 mb-6">開支統計</h2>
-            
-            <!-- 統計總覽卡片 -->
             <div class="bg-teal-600 rounded-[2.5rem] p-6 text-white shadow-xl mb-6">
-                <p class="text-xs opacity-80 mb-1">總預算支出 (HKD)</p>
+                <p class="text-xs opacity-80 mb-1">總預算 (HKD)</p>
                 <h3 class="text-3xl font-black font-mono mb-4">$ {{ totalExpensesHKD }}</h3>
-                
-                <!-- 分類匯總 -->
                 <div class="grid grid-cols-3 gap-2 pt-4 border-t border-white/20 text-[10px] text-center">
-                    <div>
-                        <p class="opacity-70 mb-1">🛍️ 購物</p>
-                        <p class="font-bold">${{ getCatTotal('購物') }}</p>
-                    </div>
-                    <div>
-                        <p class="opacity-70 mb-1">🍴 食物</p>
-                        <p class="font-bold">${{ getCatTotal('食物') }}</p>
-                    </div>
-                    <div>
-                        <p class="opacity-70 mb-1">✨ 其他</p>
-                        <p class="font-bold">${{ getCatTotal('其他') }}</p>
-                    </div>
+                    <div><p class="opacity-70">🛍️ 購物</p><p class="font-bold">${{ getCatTotal('購物') }}</p></div>
+                    <div><p class="opacity-70">🍴 食物</p><p class="font-bold">${{ getCatTotal('食物') }}</p></div>
+                    <div><p class="opacity-70">✨ 其他</p><p class="font-bold">${{ getCatTotal('其他') }}</p></div>
                 </div>
             </div>
-
-            <!-- 新增按鈕 -->
-            <button @click="addExpense" class="w-full py-4 bg-white border-2 border-dashed border-teal-100 rounded-2xl text-teal-600 text-xs font-bold mb-6 hover:bg-teal-50 transition-colors">
-                + 新增支出項目
-            </button>
-
-            <!-- 支出列表 -->
+            <button @click="addExpense" class="w-full py-4 bg-white border-2 border-dashed border-teal-100 rounded-2xl text-teal-600 text-xs font-bold mb-6">+ 新增支出</button>
             <div class="space-y-3">
-                <div v-for="(exp, index) in expenses" :key="index" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-50 animate-fade">
+                <div v-for="(exp, index) in expenses" :key="index" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
                     <div class="flex items-center gap-2 mb-3">
-                        <select v-model="exp.category" class="text-[10px] bg-teal-50 text-teal-600 p-1 px-2 rounded-lg font-bold outline-none border-none">
-                            <option>購物</option>
-                            <option>食物</option>
-                            <option>其他</option>
+                        <select v-model="exp.category" class="text-[10px] bg-teal-50 text-teal-600 p-1 px-2 rounded-lg font-bold outline-none">
+                            <option>購物</option><option>食物</option><option>其他</option>
                         </select>
-                        <input v-model="exp.name" placeholder="項目名稱..." class="flex-1 text-sm font-bold outline-none bg-transparent">
-                        <button @click="expenses.splice(index, 1)" class="text-slate-200 hover:text-red-400">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
+                        <input v-model="exp.name" placeholder="項目名稱..." class="flex-1 text-sm font-bold outline-none">
+                        <button @click="expenses.splice(index, 1)" class="text-slate-200"><i data-lucide="x" class="w-4 h-4"></i></button>
                     </div>
-                    
-                    <div class="flex items-center justify-between bg-slate-50 p-2 px-3 rounded-xl">
-                        <div class="flex items-center gap-1 font-mono text-xs text-slate-400">
-                            JPY <input type="number" v-model.number="exp.amount" class="bg-transparent font-bold text-teal-700 w-24 outline-none ml-1" placeholder="0">
-                        </div>
-                        <span class="text-[10px] text-slate-400 font-mono">
-                            ≈ HKD {{ (exp.amount * exchangeRate).toFixed(1) }}
-                        </span>
+                    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl">
+                        <div class="font-mono text-xs text-slate-400">JPY <input type="number" v-model.number="exp.amount" class="bg-transparent font-bold text-teal-700 w-24 outline-none"></div>
+                        <span class="text-[10px] text-slate-400">≈ HKD {{ (exp.amount * exchangeRate).toFixed(1) }}</span>
                     </div>
-                </div>
-                
-                <div v-if="expenses.length === 0" class="text-center py-10 text-slate-300 text-xs italic">
-                    尚無開支記錄
                 </div>
             </div>
         </div>
 
-        <!-- 底部固定導覽 -->
+        <!-- 底部導覽 -->
         <nav class="fixed bottom-6 left-6 right-6 glass-effect rounded-[2.5rem] border border-white/50 shadow-2xl flex justify-around items-center p-2 z-50">
-            <button @click="currentTab = 'itinerary'" :class="currentTab === 'itinerary' ? 'text-teal-600' : 'text-slate-300'" class="flex flex-col items-center p-3">
-                <i data-lucide="calendar" class="w-6 h-6"></i>
-                <span class="text-[9px] mt-1 font-bold">行程</span>
+            <button @click="setTab('itinerary')" :class="currentTab === 'itinerary' ? 'text-teal-600' : 'text-slate-300'" class="flex flex-col items-center p-3">
+                <i data-lucide="calendar" class="w-6 h-6"></i><span class="text-[9px] mt-1 font-bold">行程</span>
             </button>
-            <button class="text-slate-200 flex flex-col items-center p-3 opacity-30 cursor-not-allowed">
-                <i data-lucide="banknote" class="w-6 h-6"></i>
-                <span class="text-[9px] mt-1 font-bold">記帳</span>
-            </button>
-            <button class="text-slate-200 flex flex-col items-center p-3 opacity-30 cursor-not-allowed">
-                <i data-lucide="stars" class="w-6 h-6"></i>
-                <span class="text-[9px] mt-1 font-bold">心願</span>
+            <button @click="setTab('finance')" :class="currentTab === 'finance' ? 'text-teal-600' : 'text-slate-300'" class="flex flex-col items-center p-3">
+                <i data-lucide="banknote" class="w-6 h-6"></i><span class="text-[9px] mt-1 font-bold">記帳</span>
             </button>
         </nav>
     </div>
 
     <script>
         const { createApp, ref, onMounted, computed, nextTick, watch } = Vue;
-
         createApp({
             setup() {
-                // 基礎狀態
                 const currentTab = ref('itinerary');
                 const selectedDay = ref(1);
                 const tripName = ref('');
                 const startDate = ref('2026-05-12');
                 const endDate = ref('2026-05-16');
-                const itineraries = ref([]); // 保持全空白
+                const exchangeRate = ref(0.052);
                 
-                // 天氣相關
+                const itineraries = ref([]);
+                const expenses = ref([]);
                 const weatherForecast = ref([]);
                 const loadingWeather = ref(true);
-                const apiKey = '78781fcf8811b4ce945f224a81386c53';
 
-                // 天數計算邏輯
                 const totalDays = computed(() => {
                     const start = new Date(startDate.value);
                     const end = new Date(endDate.value);
-                    const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-                    return diff > 0 ? diff : 1;
+                    return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1);
                 });
 
-                // 監聽總天數，若日期範圍縮小，自動跳回 Day 1 避免錯誤
-                watch(totalDays, (newVal) => {
-                    if (selectedDay.value > newVal) selectedDay.value = 1;
-                });
+                watch(totalDays, (newVal) => { if (selectedDay.value > newVal) selectedDay.value = 1; });
 
-                // 顯示當前選中 Day 的日期內容 (如: 5月12日)
                 const currentDayLabel = computed(() => {
                     const d = new Date(startDate.value);
                     d.setDate(d.getDate() + (selectedDay.value - 1));
                     return d.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' });
                 });
 
-                // 過濾並排序當天的行程卡片
-                const filteredItineraries = computed(() => {
-                    return itineraries.value
-                        .filter(i => i.day === selectedDay.value)
-                        .sort((a, b) => a.time.localeCompare(b.time));
-                });
+                const filteredItineraries = computed(() => itineraries.value.filter(i => i.day === selectedDay.value).sort((a,b) => a.time.localeCompare(b.time)));
 
-                // 匹配當天的天氣預報
+                const totalExpensesHKD = computed(() => (expenses.value.reduce((s, e) => s + (Number(e.amount) || 0), 0) * exchangeRate.value).toFixed(1));
+                const getCatTotal = (c) => (expenses.value.filter(e => e.category === c).reduce((s, e) => s + (Number(e.amount) || 0), 0) * exchangeRate.value).toFixed(0);
+
                 const dayWeather = computed(() => {
                     if (!weatherForecast.value.length) return null;
                     const d = new Date(startDate.value);
@@ -230,53 +157,26 @@
                     return weatherForecast.value.find(w => w.dt_txt.includes(targetStr)) || weatherForecast.value[0];
                 });
 
-                const fetchWeather = async () => {
-                    try {
-                        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Okinawa&units=metric&appid=${apiKey}`);
-                        const data = await res.json();
-                        weatherForecast.value = data.list.map(i => ({
-                            temp: i.main.temp,
-                            rain: i.pop * 100,
-                            dt_txt: i.dt_txt
-                        }));
-                    } catch (e) {
-                        console.error("Weather Error", e);
-                    } finally {
-                        loadingWeather.value = false;
-                        nextTick(() => lucide.createIcons());
-                    }
-                };
-
-                // 行程操控方法
-                const addPlan = () => {
-                    itineraries.value.push({ day: selectedDay.value, time: '12:00', location: '' });
-                    nextTick(() => lucide.createIcons());
-                };
-
-                const removePlan = (idx) => {
-                    const target = filteredItineraries.value[idx];
-                    const realIdx = itineraries.value.indexOf(target);
-                    itineraries.value.splice(realIdx, 1);
-                };
-
-                const openMap = (loc) => {
-                    if (!loc) return;
-                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc + ' 沖繩')}`, '_blank');
-                };
+                const setTab = (t) => { currentTab.value = t; nextTick(() => lucide.createIcons()); };
+                const addPlan = () => { itineraries.value.push({ day: selectedDay.value, time: '12:00', location: '' }); nextTick(() => lucide.createIcons()); };
+                const removePlan = (idx) => { itineraries.value.splice(itineraries.value.indexOf(filteredItineraries.value[idx]), 1); };
+                const addExpense = () => { expenses.value.unshift({ category: '食物', name: '', amount: null }); nextTick(() => lucide.createIcons()); };
+                const openMap = (loc) => loc && window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc + ' 沖繩')}`, '_blank');
 
                 onMounted(() => {
-                    fetchWeather();
+                    fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Okinawa&units=metric&appid=78781fcf8811b4ce945f224a81386c53`)
+                        .then(res => res.json()).then(data => {
+                            weatherForecast.value = data.list.map(i => ({ temp: i.main.temp, rain: i.pop * 100, dt_txt: i.dt_txt }));
+                            loadingWeather.value = false;
+                            nextTick(() => lucide.createIcons());
+                        });
                     lucide.createIcons();
                 });
 
-                // 監聽 Day 切換，重新繪製圖標
-                watch(selectedDay, () => nextTick(() => lucide.createIcons()));
-
                 return {
-                    currentTab, selectedDay, tripName, startDate, endDate, totalDays,
-                    currentDayLabel, itineraries, filteredItineraries, loadingWeather,
-                    dayWeather, addPlan, removePlan, openMap,  expenses, exchangeRate, 
-                    totalExpensesHKD, getCatTotal, addExpense, setTab
+                    currentTab, selectedDay, tripName, startDate, endDate, totalDays, currentDayLabel,
+                    itineraries, filteredItineraries, expenses, totalExpensesHKD, getCatTotal,
+                    loadingWeather, dayWeather, setTab, addPlan, removePlan, addExpense, openMap, exchangeRate
                 };
             }
         }).mount('#app');
