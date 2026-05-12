@@ -210,11 +210,12 @@
                     return d.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' });
                 });
                 const setDay = (n) => {
-    selectedDay.value = n;
+    selectedDay.value = Number(n);
     nextTick(() => {
         if (window.lucide) lucide.createIcons();
     });
 };
+
 
                 const filteredItineraries = computed(() => {
     const dayToFilter = Number(selectedDay.value);
