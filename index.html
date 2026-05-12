@@ -18,35 +18,30 @@
             border-radius: 999px;
             padding: 8px 24px;
             box-shadow: 0 4px 15px rgba(255, 112, 138, 0.3);
-            cursor: pointer;
         }
 
         .date-sub-capsule {
             background-color: white;
             border-radius: 999px;
-            padding: 4px 16px;
-            font-size: 12px;
+            padding: 6px 18px;
+            font-size: 13px;
             color: #FF708A;
             font-weight: bold;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-top: 8px;
-            cursor: pointer;
+            margin-top: 10px;
         }
 
-        .date-pill.active { background-color: #FF708A; color: white; }
+        .date-pill.active { background-color: #FF708A; color: white; transform: scale(1.05); }
         
-        /* 編輯輸入框樣式 */
-        .edit-input {
-            background: transparent;
-            border: none;
-            text-align: center;
-            color: inherit;
-            font-weight: inherit;
-            width: auto;
+        .date-input {
+            background: #FFF5F7;
+            border: 1px solid #FFC1CC;
+            border-radius: 8px;
+            padding: 2px 8px;
+            color: #FF708A;
+            font-size: 12px;
             outline: none;
-            border-bottom: 1px dashed rgba(255,255,255,0.5);
         }
-        .date-sub-capsule .edit-input { border-bottom-color: #FF708A; }
 
         .animate-slide-up { animation: slide-up 0.3s ease-out; }
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -56,28 +51,33 @@
 
 <div id="app" class="max-w-md mx-auto min-h-screen pb-28 relative overflow-x-hidden">
     
-    <!-- 可編輯 Header -->
+    <!-- Header -->
     <header class="flex flex-col items-center py-6">
+        <!-- 旅遊標題編輯 -->
         <div class="capsule-title text-white font-bold text-xl flex items-center gap-2">
             <span v-if="!isEditingTitle" @click="isEditingTitle = true">{{ tripTitle }}</span>
-            <input v-else v-model="tripTitle" @blur="isEditingTitle = false" @keyup.enter="isEditingTitle = false" class="edit-input" autofocus>
+            <input v-else v-model="tripTitle" @blur="isEditingTitle = false" @keyup.enter="isEditingTitle = false" class="bg-transparent border-b border-white outline-none w-32 text-center" autofocus>
             <span>🌴</span>
         </div>
         
-        <div class="date-sub-capsule flex items-center gap-1">
-            <template v-if="!isEditingDate">
-                <span @click="isEditingDate = true">{{ dateRange }} ‧ 共 {{ totalDays }} 天</span>
-            </template>
-            <template v-else>
-                <input v-model="dateRange" class="edit-input w-32" placeholder="日期範圍">
-                <input v-model.number="totalDays" type="number" class="edit-input w-8" @blur="isEditingDate = false">
-            </template>
+        <!-- 日期編輯區域 (彈出日曆) -->
+        <div class="date-sub-capsule flex flex-col items-center gap-2">
+            <div v-if="!isEditingDate" @click="isEditingDate = true" class="cursor-pointer flex items-center gap-1">
+                <i data-lucide="calendar" class="w-3 h-3"></i>
+                {{ startDate }} ~ {{ endDate }} ‧ 共 {{ totalDays }} 天
+            </div>
+            <div v-else class="flex items-center gap-2 animate-fadeIn">
+                <input type="date" v-model="startDate" class="date-input">
+                <span class="text-pink-300">to</span>
+                <input type="date" v-model="endDate" class="date-input" @change="isEditingDate = false">
+                <button @click="isEditingDate = false" class="bg-pink-100 p-1 rounded-full"><i data-lucide="check" class="w-3 h-3"></i></button>
+            </div>
         </div>
     </header>
 
     <main class="px-4">
         <div v-if="activeTab === 'itinerary'">
-            <!-- 橫向滑動日期選單 -->
+            <!-- 橫向滑動日期選單 (隨日期差自動增減) -->
             <div class="flex overflow-x-auto gap-3 py-4 hide-scrollbar snap-x">
                 <div v-for="n in totalDays" :key="n"
                      @click="selectedDayIndex = n-1"
@@ -88,7 +88,7 @@
                 </div>
             </div>
 
-            <!-- 天氣資訊 -->
+            <!-- 天氣概況 -->
             <div class="bg-white/60 rounded-3xl p-4 mb-6 flex items-center justify-between shadow-sm border border-white">
                 <div class="flex items-center gap-3">
                     <img :src="`https://openweathermap.org/img/wn/${weather.icon}@2x.png`" class="w-12 h-12">
@@ -102,7 +102,7 @@
             <!-- 行程清單 -->
             <div class="space-y-4">
                 <div v-for="(item, idx) in currentItinerary" :key="idx" 
-                     class="bg-white rounded-3xl p-5 shadow-sm border border-pink-50 relative group">
+                     class="bg-white rounded-3xl p-5 shadow-sm border border-pink-50 relative">
                     
                     <div class="flex gap-4 items-start">
                         <div class="flex flex-col items-center">
@@ -113,18 +113,18 @@
                         <div class="flex-grow">
                             <h3 class="font-bold text-gray-800 text-lg">{{ item.location }}</h3>
                             
-                            <!-- 備註編輯區 -->
+                            <!-- 備註編輯 -->
                             <div class="mt-2">
                                 <textarea v-model="item.note" 
-                                          class="w-full text-xs text-gray-400 bg-gray-50 p-2 rounded-xl border-none focus:ring-1 focus:ring-pink-200 outline-none resize-none" 
-                                          placeholder="加入備註..."></textarea>
+                                          class="w-full text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border-none focus:ring-1 focus:ring-pink-200 outline-none resize-none" 
+                                          placeholder="這裏可以寫備註..."></textarea>
                             </div>
 
                             <div class="flex gap-2 mt-3">
-                                <button @click="openNav(item.location)" class="text-[10px] bg-blue-50 text-blue-500 px-3 py-1.5 rounded-full flex items-center gap-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i> 導航
+                                <button @click="openNav(item.location)" class="text-[10px] bg-blue-50 text-blue-500 px-4 py-2 rounded-full flex items-center gap-1 font-bold">
+                                    <i data-lucide="navigation" class="w-3 h-3"></i> 導航
                                 </button>
-                                <button @click="removeItem(idx)" class="text-[10px] bg-red-50 text-red-400 px-3 py-1.5 rounded-full">
+                                <button @click="removeItem(idx)" class="text-[10px] bg-red-50 text-red-400 px-4 py-2 rounded-full font-bold">
                                     刪除
                                 </button>
                             </div>
@@ -132,53 +132,49 @@
                     </div>
                 </div>
 
-                <button @click="showAddModal = true" class="w-full py-4 rounded-3xl border-2 border-dashed border-pink-200 text-pink-300 font-medium flex justify-center items-center gap-2 hover:bg-pink-50">
-                    <i data-lucide="plus-circle"></i> 新增行程
+                <button @click="showAddModal = true" class="w-full py-4 rounded-3xl border-2 border-dashed border-pink-200 text-pink-300 font-medium flex justify-center items-center gap-2 hover:bg-pink-50 transition-all">
+                    <i data-lucide="plus" class="w-5 h-5"></i> 新增 Day {{ selectedDayIndex + 1 }} 行程
                 </button>
             </div>
         </div>
 
-        <!-- 空白分頁 -->
-        <div v-else class="flex flex-col items-center mt-20 text-gray-300">
-            <i data-lucide="sparkles" class="w-12 h-12 mb-2 animate-pulse"></i>
-            <p>即將解鎖此功能 ✨</p>
+        <!-- 預留分頁 -->
+        <div v-else class="flex flex-col items-center mt-24 text-pink-200">
+            <i data-lucide="heart" class="w-12 h-12 mb-2 animate-bounce"></i>
+            <p class="text-sm font-medium">記錄你的美好時光</p>
         </div>
     </main>
 
     <!-- 新增行程彈窗 -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/40 flex items-end z-[50]">
-        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up shadow-2xl">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/40 flex items-end z-[100]">
+        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-gray-700">準備去哪裡？</h2>
+                <h2 class="text-xl font-bold text-gray-700">新增行程點</h2>
                 <button @click="showAddModal = false" class="text-gray-300"><i data-lucide="x"></i></button>
             </div>
             <div class="space-y-4">
                 <div class="flex gap-4">
                     <div class="flex-1">
-                        <label class="text-xs text-gray-400 ml-2">時間</label>
-                        <input v-model="newItem.time" type="time" class="w-full p-4 bg-gray-50 rounded-2xl outline-none mt-1">
+                        <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold">Time</label>
+                        <input v-model="newItem.time" type="time" class="w-full p-4 bg-gray-50 rounded-2xl outline-none mt-1 border border-transparent focus:border-pink-200">
                     </div>
                     <div class="flex-[2]">
-                        <label class="text-xs text-gray-400 ml-2">地點</label>
-                        <input v-model="newItem.location" type="text" class="w-full p-4 bg-gray-50 rounded-2xl outline-none mt-1" placeholder="目的地">
+                        <label class="text-[10px] text-gray-400 ml-2 uppercase font-bold">Location</label>
+                        <input v-model="newItem.location" type="text" class="w-full p-4 bg-gray-50 rounded-2xl outline-none mt-1 border border-transparent focus:border-pink-200" placeholder="要去哪裡呢？">
                     </div>
                 </div>
-                <div>
-                    <label class="text-xs text-gray-400 ml-2">備註</label>
-                    <textarea v-model="newItem.note" class="w-full p-4 bg-gray-50 rounded-2xl outline-none mt-1" placeholder="寫點什麼..." rows="2"></textarea>
-                </div>
-                <button @click="addItem" class="w-full py-4 bg-pink-500 text-white rounded-2xl font-bold shadow-lg shadow-pink-100">新增到 Day {{ selectedDayIndex + 1 }}</button>
+                <button @click="addItem" class="w-full py-4 bg-pink-500 text-white rounded-2xl font-bold shadow-lg shadow-pink-100 mt-4">確認新增</button>
             </div>
         </div>
     </div>
 
-    <!-- 底部選單 -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/90 backdrop-blur-md h-16 rounded-full shadow-2xl flex items-center justify-around px-6 z-40">
+    <!-- 底部導航 -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/95 backdrop-blur-md h-18 rounded-full shadow-2xl flex items-center justify-around px-6 z-50 border border-white">
         <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
-                class="flex flex-col items-center gap-1 transition-all"
+                class="flex flex-col items-center gap-1 py-2 px-4 transition-all"
                 :class="activeTab === tab.id ? 'text-pink-500 scale-110' : 'text-gray-300'">
             <i :data-lucide="tab.icon" class="w-6 h-6"></i>
-            <span class="text-[10px] font-bold">{{ tab.name }}</span>
+            <span class="text-[10px] font-black">{{ tab.name }}</span>
         </button>
     </nav>
 </div>
@@ -188,26 +184,36 @@
 
     createApp({
         setup() {
-            // 狀態控制
             const tripTitle = ref('沖繩之旅');
-            const dateRange = ref('06/15 - 06/19');
-            const totalDays = ref(5);
             const isEditingTitle = ref(false);
             const isEditingDate = ref(false);
             
+            // 預設日期
+            const startDate = ref('2026-06-15');
+            const endDate = ref('2026-06-19');
+
+            // 自動計算總天數 (包含頭尾)
+            const totalDays = computed(() => {
+                const start = new Date(startDate.value);
+                const end = new Date(endDate.value);
+                if (isNaN(start) || isNaN(end)) return 1;
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                return diffDays > 0 ? diffDays : 1;
+            });
+
             const activeTab = ref('itinerary');
             const selectedDayIndex = ref(0);
             const showAddModal = ref(false);
             const weather = ref({ temp: '--', description: '載入中', icon: '01d' });
             
-            // 行程數據管理 (預設空數組)
+            // 行程數據存儲
             const itineraryData = ref({});
 
             const currentItinerary = computed(() => {
-                if (!itineraryData.value[selectedDayIndex.value]) {
-                    itineraryData.value[selectedDayIndex.value] = [];
-                }
-                return itineraryData.value[selectedDayIndex.value];
+                const day = selectedDayIndex.value;
+                if (!itineraryData.value[day]) itineraryData.value[day] = [];
+                return itineraryData.value[day];
             });
 
             const newItem = ref({ time: '09:00', location: '', note: '' });
@@ -245,13 +251,20 @@
 
             const openNav = (loc) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc + ' 沖繩')}`);
 
+            // 當總天數減少時，重置當前選中天數，避免溢出
+            watch(totalDays, (newVal) => {
+                if (selectedDayIndex.value >= newVal) {
+                    selectedDayIndex.value = newVal - 1;
+                }
+            });
+
             onMounted(() => {
                 lucide.createIcons();
                 fetchWeather();
             });
 
             return {
-                tripTitle, dateRange, totalDays, isEditingTitle, isEditingDate,
+                tripTitle, startDate, endDate, totalDays, isEditingTitle, isEditingDate,
                 activeTab, tabs, selectedDayIndex, currentItinerary,
                 showAddModal, newItem, addItem, removeItem, openNav, weather
             };
