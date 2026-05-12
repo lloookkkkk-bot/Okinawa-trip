@@ -11,86 +11,101 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
         
         :root {
-            --title-color: #DB4D6D;
-            --bg-color: #FFF1F2;
-            --accent-color: #B5495B; 
-            --dark-line: #4A4A4A;
-            --paper-color: #FAF9F6;
+            /* 主背景 */
+            --bg-color: #F8C3CD;
+            /* 深色 */
+            --dark-1: #64363C;
+            --dark-2: #904840;
+            --dark-3: #9F353A;
+            /* 淺色 */
+            --light-1: #E16B8C;
+            --light-2: #B5495B;
+            --light-3: #F596AA;
         }
 
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             background-color: var(--bg-color); 
-            color: var(--dark-line); 
+            color: var(--dark-1); 
             letter-spacing: 0.02em;
         }
 
-        .container-safe { padding-left: 20px; padding-right: 20px; width: 100%; }
+        .container-safe { padding: 0 20px; width: 100%; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* 移除陰影，強化邊框設計 */
         .washi-card {
-            background-color: white;
-            border: 2px solid var(--dark-line);
-            border-radius: 24px;
-            box-shadow: 4px 4px 0px var(--dark-line);
+            background-color: #FFFFFF;
+            border: 2px solid var(--dark-1);
+            border-radius: 20px;
             margin-bottom: 20px;
             overflow: hidden;
+            box-shadow: none !important; /* 確保消除陰影 */
         }
 
         .dark-feature-card {
-            background: linear-gradient(135deg, var(--accent-color), var(--title-color));
-            border: 2.5px solid #FFFFFF;
-            border-radius: 30px;
+            background-color: var(--light-2);
+            border: 2px solid var(--dark-1);
+            border-radius: 24px;
             color: white;
-            box-shadow: 0 8px 0px rgba(181, 73, 91, 0.2);
             margin-bottom: 20px;
+            box-shadow: none !important;
         }
 
         .capsule-title {
-            background-color: var(--title-color);
-            border: 2px solid white;
+            background-color: var(--light-2);
+            border: 2px solid var(--dark-1);
             border-radius: 999px;
             padding: 8px 24px;
-            box-shadow: 0 4px 12px rgba(219, 77, 109, 0.2);
+            color: white;
         }
 
         .date-pill {
-            background-color: white;
-            border: 2px solid var(--dark-line);
+            background-color: #FFFFFF;
+            border: 2px solid var(--dark-1);
             width: 72px; height: 90px;
-            border-radius: 20px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 16px;
+            transition: all 0.2s ease;
         }
 
         .date-pill.active { 
-            background-color: var(--accent-color); 
+            background-color: var(--light-1); 
             color: white; 
-            border-color: white;
-            transform: scale(1.08) rotate(-2deg);
-            box-shadow: 4px 4px 0px var(--dark-line);
+            border-color: var(--dark-1);
+        }
+
+        .form-input {
+            width: 100%; padding: 12px 16px; 
+            background: #FFFFFF; 
+            border: 2px solid var(--dark-1); 
+            border-radius: 12px; 
+            font-weight: 700; 
+            outline: none;
+            color: var(--dark-1);
+        }
+        
+        .nav-button {
+            border: none;
+            background: none;
+            transition: transform 0.2s;
         }
 
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-
-        .form-input {
-            width: 100%; padding: 12px 16px; background: #F3F4F6; border: 2px solid transparent; border-radius: 16px; font-weight: 700; outline: none; transition: all 0.2s;
-        }
-        .form-input:focus { border-color: var(--title-color); background: white; }
+        .animate-slide-up { animation: slideUp 0.3s ease-out; }
     </style>
 </head>
 <body>
 <div id="app" class="max-w-md mx-auto min-h-screen pb-32 relative overflow-x-hidden">
     <header class="flex flex-col items-center py-8 container-safe">
-        <div class="capsule-title text-white font-black text-lg flex items-center gap-2">
+        <div class="capsule-title font-black text-lg flex items-center gap-2">
             <span v-if="!isEditingTitle" @click="isEditingTitle = true">{{ tripTitle }}</span>
             <input v-else v-model="tripTitle" @blur="isEditingTitle = false" @keyup.enter="isEditingTitle = false" class="bg-transparent border-b-2 border-white outline-none w-32 text-center" autofocus>
             <span>🏮</span>
         </div>
-        <div class="mt-4 bg-white border-2 border-[#4A4A4A] rounded-full px-5 py-1.5 text-xs font-bold text-[#4A4A4A] shadow-[3px_3px_0px_#4A4A4A]">
+        <div class="mt-4 bg-white border-2 border-[#64363C] rounded-full px-5 py-1.5 text-xs font-bold text-[#64363C]">
             <div v-if="!isEditingDate" @click="isEditingDate = true" class="flex items-center gap-2">
-                <i data-lucide="calendar" class="w-3 h-3 text-pink-500"></i>
+                <i data-lucide="calendar" class="w-3 h-3 text-[#B5495B]"></i>
                 {{ startDate }} ➔ {{ endDate }}
             </div>
             <div v-else class="flex items-center gap-1">
@@ -103,88 +118,90 @@
     <main class="container-safe">
         <!-- ==================== 1. 行程分頁 ==================== -->
         <div v-if="activeTab === 'itinerary'">
-            <div class="washi-card p-5 flex items-center justify-between border-l-[12px] border-[#DB4D6D]">
+            <!-- 天氣卡片 -->
+            <div class="washi-card p-5 flex items-center justify-between border-l-[12px] border-[#B5495B]">
                 <div class="flex items-center gap-4">
-                    <div class="bg-[#FEDFE1] border-2 border-[#4A4A4A] rounded-full p-1 shadow-[2px_2px_0px_#4A4A4A]">
+                    <div class="bg-[#F596AA] border-2 border-[#64363C] rounded-full p-1">
                         <img :src="`https://openweathermap.org/img/wn/${weather.icon}@2x.png`" class="w-12 h-12" alt="Weather">
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase font-black text-gray-400">Okinawa Today</p>
-                        <p class="text-xl font-black">{{ weather.temp }}°C <span class="text-sm font-normal">/ {{ weather.description }}</span></p>
+                        <p class="text-[10px] uppercase font-black text-[#904840]">Today in Naha</p>
+                        <p class="text-xl font-black text-[#64363C]">{{ weather.temp }}°C <span class="text-sm font-normal">/ {{ weather.description }}</span></p>
                     </div>
                 </div>
-                <div class="bg-pink-50 border border-pink-200 px-3 py-1 rounded-lg text-[10px] font-bold text-pink-500 rotate-3">
+                <div class="bg-[#F8C3CD] border-2 border-[#B5495B] px-3 py-1 rounded-lg text-[10px] font-bold text-[#9F353A]">
                     {{ clothingAdvice }} 👒
                 </div>
             </div>
 
             <!-- Day 選單 -->
-            <div class="flex overflow-x-auto gap-5 py-4 mb-2 hide-scrollbar snap-x">
+            <div class="flex overflow-x-auto gap-4 py-4 mb-2 hide-scrollbar snap-x">
                 <div v-for="n in totalDays" :key="n" @click="selectedDayIndex = n-1"
-                     class="date-pill flex-shrink-0 flex flex-col items-center justify-center cursor-pointer snap-start"
-                     :class="{ 'active': selectedDayIndex === n-1 }">
-                    <span class="text-[10px] font-black opacity-60">DAY</span>
-                    <span class="text-2xl font-black">{{ n }}</span>
+                     class="date-pill flex-shrink-0 flex flex-col items-center justify-center cursor-pointer snap-start font-black"
+                     :class="selectedDayIndex === n-1 ? 'active' : 'text-[#64363C]'">
+                    <span class="text-[10px] opacity-60">DAY</span>
+                    <span class="text-2xl">{{ n }}</span>
                 </div>
             </div>
 
             <!-- 行程列表 -->
-            <div class="space-y-5 mt-4">
-                <div v-for="(item, idx) in currentItinerary" :key="idx" class="washi-card p-6 relative group">
-                    <div class="absolute -left-1 -top-1 bg-[#4A4A4A] text-white text-[10px] px-2 py-0.5 rounded-br-lg font-bold">
+            <div class="space-y-4 mt-4">
+                <div v-for="(item, idx) in currentItinerary" :key="idx" class="washi-card p-6 relative">
+                    <div class="absolute -left-0.5 -top-0.5 bg-[#64363C] text-white text-[10px] px-3 py-1 rounded-br-xl font-bold">
                         {{ item.time }}
                     </div>
                     <div class="mt-2">
-                        <h3 class="font-black text-gray-800 text-lg flex items-center gap-2">📍 {{ item.location }}</h3>
-                        <p class="text-xs text-gray-400 mt-2 bg-[#FDFDFD] border border-dashed border-gray-200 p-3 rounded-xl italic">
-                            「 {{ item.note || '寫點什麼吧...' }} 」
+                        <h3 class="font-black text-[#64363C] text-lg flex items-center gap-2">📍 {{ item.location }}</h3>
+                        <p class="text-xs text-[#904840] mt-3 bg-[#F8C3CD]/30 border border-[#F596AA] p-3 rounded-xl italic">
+                            {{ item.note || '記錄下當下的心情...' }}
                         </p>
                         <div class="flex gap-3 mt-4">
-                            <button @click="openNav(item.location)" class="text-[10px] bg-[#E0F2FE] border-2 border-[#4A4A4A] text-[#0369A1] px-4 py-2 rounded-full font-black shadow-[2px_2px_0px_#4A4A4A]">導覽 🚗</button>
-                            <button @click="removeItem(idx)" class="text-[10px] bg-white border-2 border-red-200 text-red-400 px-4 py-2 rounded-full font-black">刪除</button>
+                            <button @click="openNav(item.location)" class="text-[10px] bg-[#F596AA] border-2 border-[#64363C] text-white px-4 py-2 rounded-full font-black">導覽 🚗</button>
+                            <button @click="removeItem(idx)" class="text-[10px] bg-white border-2 border-[#E16B8C] text-[#E16B8C] px-4 py-2 rounded-full font-black">刪除</button>
                         </div>
                     </div>
                 </div>
-                <button @click="showAddModal = true" class="w-full py-5 rounded-[30px] border-3 border-dashed border-[#DB4D6D] bg-white/50 text-[#DB4D6D] font-black flex justify-center items-center gap-2">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i> 加入新的冒險
+                <!-- 新增按鈕 -->
+                <button @click="showAddModal = true" class="w-full py-5 rounded-3xl border-2 border-dashed border-[#64363C] bg-white text-[#64363C] font-black flex justify-center items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i> 增加行程
                 </button>
             </div>
         </div>
 
         <!-- ==================== 2. 記帳分頁 ==================== -->
         <div v-if="activeTab === 'billing'">
-            <div class="dark-feature-card p-7 relative overflow-hidden">
-                <div class="relative z-10">
-                    <p class="text-[10px] font-black tracking-widest mb-1 opacity-80">TOTAL SPENT 👛</p>
-                    <div class="flex items-baseline gap-2 mb-6">
-                        <span class="text-4xl font-black">¥ {{ totalExpenses.toLocaleString() }}</span>
-                        <span class="text-xs border border-white/50 px-2 py-0.5 rounded-full">HK$ {{ (totalExpenses * exchangeRate).toFixed(0) }}</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div v-for="(val, cat) in categoryTotals" :key="cat" class="bg-white/10 border border-white/20 rounded-2xl p-2 text-center backdrop-blur-sm">
-                            <p class="text-[9px] font-bold mb-0.5">{{ cat }}</p>
-                            <p class="font-black text-sm">¥{{ val }}</p>
-                        </div>
+            <!-- 總額卡片 -->
+            <div class="dark-feature-card p-7 relative border-[#64363C] bg-[#B5495B]">
+                <p class="text-[10px] font-black tracking-widest mb-1 text-[#F8C3CD]">TOTAL EXPENSES 👛</p>
+                <div class="flex items-baseline gap-2 mb-6 text-white">
+                    <span class="text-4xl font-black">¥ {{ totalExpenses.toLocaleString() }}</span>
+                    <span class="text-xs opacity-80">HK$ {{ (totalExpenses * exchangeRate).toFixed(0) }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div v-for="(val, cat) in categoryTotals" :key="cat" class="bg-white/20 border border-white/30 rounded-xl p-2 text-center">
+                        <p class="text-[9px] font-bold text-white mb-0.5">{{ cat }}</p>
+                        <p class="font-black text-white text-sm">¥{{ val }}</p>
                     </div>
                 </div>
             </div>
 
-            <button @click="showAddExpenseModal = true" class="w-full py-4 bg-white/80 rounded-2xl border-2 border-dashed border-[#4A4A4A] text-[#4A4A4A] text-sm font-black flex items-center justify-center gap-2 mb-6 shadow-[3px_3px_0px_#4A4A4A]">
+            <button @click="showAddExpenseModal = true" class="w-full py-4 bg-white rounded-2xl border-2 border-[#64363C] text-[#64363C] text-sm font-black flex items-center justify-center gap-2 mb-6">
                 <i data-lucide="plus" class="w-4 h-4"></i> 記錄一筆開銷
             </button>
 
+            <!-- 記帳清單 -->
             <div class="space-y-3">
-                <div v-for="(exp, index) in dailyExpenses" :key="index" class="washi-card p-4 flex justify-between items-center">
+                <div v-for="(exp, index) in dailyExpenses" :key="index" class="washi-card p-4 flex justify-between items-center border-[#64363C]">
                     <div class="flex items-center gap-4">
-                        <div class="text-2xl bg-[#FEDFE1] w-12 h-12 flex items-center justify-center rounded-xl border-2 border-[#4A4A4A]">{{ getCategoryIcon(exp.category) }}</div>
+                        <div class="text-xl bg-[#F596AA] w-12 h-12 flex items-center justify-center rounded-xl border-2 border-[#64363C]">{{ getCategoryIcon(exp.category) }}</div>
                         <div>
-                            <h4 class="font-black text-gray-800 text-sm">{{ exp.item }}</h4>
-                            <p class="text-[10px] font-bold text-pink-500 uppercase">{{ exp.category }}</p>
+                            <h4 class="font-black text-[#64363C] text-sm">{{ exp.item }}</h4>
+                            <p class="text-[10px] font-bold text-[#9F353A] uppercase">{{ exp.category }}</p>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="font-black text-gray-800 text-sm">¥ {{ exp.amount.toLocaleString() }}</p>
-                        <button @click="removeExpense(index)" class="text-gray-300 mt-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <p class="font-black text-[#64363C] text-sm">¥ {{ exp.amount.toLocaleString() }}</p>
+                        <button @click="removeExpense(index)" class="text-[#E16B8C] mt-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>
             </div>
@@ -192,77 +209,64 @@
 
         <!-- ==================== 3. 心願分頁 ==================== -->
         <div v-if="activeTab === 'wishlist'">
-            <div class="flex bg-white border-2 border-[#4A4A4A] p-1.5 rounded-2xl mb-8 shadow-[4px_4px_0px_#4A4A4A]">
-                <button @click="wishlistSubTab = 'items'" class="flex-1 py-3 rounded-xl text-xs font-black" :class="wishlistSubTab === 'items' ? 'bg-[#DB4D6D] text-white' : 'text-gray-400'">🛍️ 想要買</button>
-                <button @click="wishlistSubTab = 'places'" class="flex-1 py-3 rounded-xl text-xs font-black" :class="wishlistSubTab === 'places' ? 'bg-[#DB4D6D] text-white' : 'text-gray-400'">📍 想去處</button>
+            <!-- 切換按鈕 -->
+            <div class="flex bg-white border-2 border-[#64363C] p-1.5 rounded-2xl mb-8">
+                <button @click="wishlistSubTab = 'items'" class="flex-1 py-3 rounded-xl text-xs font-black transition-colors" :class="wishlistSubTab === 'items' ? 'bg-[#E16B8C] text-white' : 'text-[#904840]'">🛍️ 想要買</button>
+                <button @click="wishlistSubTab = 'places'" class="flex-1 py-3 rounded-xl text-xs font-black transition-colors" :class="wishlistSubTab === 'places' ? 'bg-[#E16B8C] text-white' : 'text-[#904840]'">📍 想去處</button>
             </div>
 
+            <!-- 想要買內容 -->
             <div v-if="wishlistSubTab === 'items'" class="space-y-4">
                 <div class="flex gap-2 mb-6">
-                    <input v-model="newWishText" placeholder="想要買什麼？" class="flex-grow p-4 bg-white border-2 border-[#4A4A4A] rounded-2xl text-sm font-bold outline-none shadow-[3px_3px_0px_#4A4A4A]">
-                    <button @click="addWishItem" class="bg-[#B5495B] border-2 border-[#4A4A4A] text-white px-5 rounded-2xl shadow-[3px_3px_0px_#4A4A4A] active:translate-y-0.5"><i data-lucide="plus"></i></button>
+                    <input v-model="newWishText" placeholder="想要買什麼？" class="form-input">
+                    <button @click="addWishItem" class="bg-[#B5495B] border-2 border-[#64363C] text-white px-5 rounded-xl"><i data-lucide="plus"></i></button>
                 </div>
-                <div v-for="(item, idx) in wishlistItems" :key="idx" class="washi-card p-4 flex justify-between items-center" :class="{ 'opacity-50': item.checked }">
+                <div v-for="(item, idx) in wishlistItems" :key="idx" class="washi-card p-4 flex justify-between items-center border-[#64363C]" :class="{ 'bg-[#F8C3CD]/20': item.checked }">
                     <div class="flex items-center gap-4">
-                        <div @click="item.checked = !item.checked" class="w-7 h-7 rounded-lg border-2 border-[#4A4A4A] flex items-center justify-center cursor-pointer" :class="item.checked ? 'bg-[#DB4D6D] border-[#DB4D6D]' : 'bg-white'">
+                        <div @click="item.checked = !item.checked" class="w-7 h-7 rounded-lg border-2 border-[#64363C] flex items-center justify-center cursor-pointer" :class="item.checked ? 'bg-[#9F353A] border-[#9F353A]' : 'bg-white'">
                             <i v-if="item.checked" data-lucide="check" class="w-5 h-5 text-white"></i>
                         </div>
-                        <span class="font-black text-gray-700" :class="{ 'line-through': item.checked }">{{ item.text }}</span>
+                        <span class="font-black text-[#64363C]" :class="{ 'line-through opacity-50': item.checked }">{{ item.text }}</span>
                     </div>
-                    <button @click="removeWishItem(idx)" class="text-gray-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button @click="removeWishItem(idx)" class="text-[#E16B8C]"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
             </div>
 
-            <div v-else class="space-y-5">
+            <!-- 想去處內容 -->
+            <div v-else class="space-y-4">
                 <div class="flex gap-2 mb-6">
-                    <input v-model="newPlaceText" placeholder="景點名稱..." class="flex-grow p-4 bg-white border-2 border-[#4A4A4A] rounded-2xl text-sm font-bold outline-none shadow-[3px_3px_0px_#4A4A4A]">
-                    <button @click="addWishPlace" class="bg-[#B5495B] border-2 border-[#4A4A4A] text-white px-5 rounded-2xl shadow-[3px_3px_0px_#4A4A4A] active:translate-y-0.5"><i data-lucide="map-pin"></i></button>
+                    <input v-model="newPlaceText" placeholder="景點名稱..." class="form-input">
+                    <button @click="addWishPlace" class="bg-[#904840] border-2 border-[#64363C] text-white px-5 rounded-xl"><i data-lucide="map-pin"></i></button>
                 </div>
-                <div v-for="(place, idx) in wishlistPlaces" :key="idx" class="washi-card p-5 flex justify-between items-center">
+                <div v-for="(place, idx) in wishlistPlaces" :key="idx" class="washi-card p-5 flex justify-between items-center border-[#64363C]">
                     <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 bg-[#E0F2FE] rounded-2xl border-2 border-[#4A4A4A] flex items-center justify-center text-2xl shadow-[3px_3px_0px_#4A4A4A]">🏝️</div>
-                        <h4 class="font-black text-gray-800 text-lg">{{ place.name }}</h4>
+                        <div class="w-14 h-14 bg-[#F596AA] rounded-2xl border-2 border-[#64363C] flex items-center justify-center text-2xl">🏝️</div>
+                        <h4 class="font-black text-[#64363C] text-lg">{{ place.name }}</h4>
                     </div>
                     <div class="flex gap-2">
-                        <button @click="openNav(place.name)" class="p-3 bg-blue-50 border-2 border-[#4A4A4A] rounded-full text-blue-500 shadow-[2px_2px_0px_#4A4A4A]"><i data-lucide="navigation" class="w-4 h-4"></i></button>
-                        <button @click="removePlace(idx)" class="p-3 bg-white border-2 border-red-100 rounded-full text-red-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button @click="openNav(place.name)" class="p-3 bg-white border-2 border-[#64363C] rounded-full text-[#B5495B]"><i data-lucide="navigation" class="w-4 h-4"></i></button>
+                        <button @click="removePlace(idx)" class="p-3 bg-white border-2 border-[#E16B8C] rounded-full text-[#E16B8C]"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- 底部導覽欄 -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white border-[3px] border-[#4A4A4A] h-20 rounded-full shadow-[0_8px_0px_#4A4A4A] flex items-center justify-around px-6 z-50">
+    <!-- 底部導覽欄 (無陰影) -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white border-2 border-[#64363C] h-20 rounded-full flex items-center justify-around px-6 z-50 shadow-none">
         <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
-                class="flex flex-col items-center gap-1 transition-all"
-                :class="activeTab === tab.id ? 'text-[#DB4D6D] scale-110' : 'text-gray-300'">
+                class="nav-button flex flex-col items-center gap-1 transition-all"
+                :class="activeTab === tab.id ? 'text-[#9F353A] scale-110' : 'text-[#904840]/40'">
             <i :data-lucide="tab.icon" class="w-6 h-6"></i>
             <span class="text-[10px] font-black uppercase">{{ tab.name }}</span>
         </button>
     </nav>
 
-    <!-- 彈窗: 新增行程 -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm flex items-end">
-        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up border-t-4 border-[#4A4A4A]">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black text-[#DB4D6D]">新的探險 🗺️</h3>
-                <button @click="showAddModal = false"><i data-lucide="x"></i></button>
-            </div>
-            <div class="space-y-4">
-                <input type="time" v-model="newItem.time" class="form-input">
-                <input type="text" v-model="newItem.location" placeholder="地點名稱" class="form-input">
-                <input type="text" v-model="newItem.note" placeholder="筆記 (選填)" class="form-input">
-                <button @click="addItem" class="w-full py-4 bg-[#DB4D6D] text-white rounded-2xl font-black shadow-[0_4px_0px_#B5495B]">加入行程</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 彈窗: 新增開銷 -->
-    <div v-if="showAddExpenseModal" class="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm flex items-end">
-        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up border-t-4 border-[#4A4A4A]">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black text-[#4A4A4A]">記錄開支 👛</h3>
+    <!-- 彈窗: 新增開銷 (食物、購物、其他) -->
+    <div v-if="showAddExpenseModal" class="fixed inset-0 bg-[#64363C]/60 z-[100] flex items-end">
+        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up border-t-4 border-[#64363C]">
+            <div class="flex justify-between items-center mb-6 text-[#64363C]">
+                <h3 class="text-xl font-black">記錄開支 👛</h3>
                 <button @click="showAddExpenseModal = false"><i data-lucide="x"></i></button>
             </div>
             <div class="space-y-4">
@@ -275,7 +279,23 @@
                         <option value="其他">其他</option>
                     </select>
                 </div>
-                <button @click="addExpense" class="w-full py-4 bg-[#4A4A4A] text-white rounded-2xl font-black shadow-[0_4px_0px_#222]">儲存記錄</button>
+                <button @click="addExpense" class="w-full py-4 bg-[#64363C] text-white rounded-2xl font-black">儲存記錄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈窗: 新增行程 -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-[#64363C]/60 z-[100] flex items-end">
+        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up border-t-4 border-[#64363C]">
+            <div class="flex justify-between items-center mb-6 text-[#64363C]">
+                <h3 class="text-xl font-black">新的探險 🗺️</h3>
+                <button @click="showAddModal = false"><i data-lucide="x"></i></button>
+            </div>
+            <div class="space-y-4">
+                <input type="time" v-model="newItem.time" class="form-input">
+                <input type="text" v-model="newItem.location" placeholder="地點名稱" class="form-input">
+                <input type="text" v-model="newItem.note" placeholder="備註 (選填)" class="form-input">
+                <button @click="addItem" class="w-full py-4 bg-[#B5495B] text-white rounded-2xl font-black">加入行程</button>
             </div>
         </div>
     </div>
@@ -285,7 +305,7 @@
 
     createApp({
         setup() {
-            // --- 基礎配置與持久化 ---
+            // --- 基礎配置與資料持久化 ---
             const activeTab = ref('itinerary');
             const tripTitle = ref(localStorage.getItem('tripTitle') || '沖繩之旅 🎏');
             const startDate = ref(localStorage.getItem('startDate') || '2026-06-15');
@@ -312,7 +332,7 @@
             const clothingAdvice = computed(() => {
                 const t = parseInt(weather.value.temp);
                 if (isNaN(t)) return "獲取中...";
-                return t > 25 ? "穿短袖吧" : "建議帶件薄外套";
+                return t > 25 ? "穿短袖吧" : "建議帶外套";
             });
 
             const fetchWeather = async () => {
@@ -348,7 +368,7 @@
                 saveData();
             };
 
-            // --- 記帳邏輯 (食物/購物/其他) ---
+            // --- 記帳邏輯 (嚴格限制：食物/購物/其他) ---
             const exchangeRate = ref(0.051); 
             const showAddExpenseModal = ref(false);
             const expensesData = ref(JSON.parse(localStorage.getItem('expensesData')) || {}); 
@@ -409,7 +429,7 @@
             const removeWishItem = (idx) => { wishlistItems.value.splice(idx, 1); saveData(); };
             const removePlace = (idx) => { wishlistPlaces.value.splice(idx, 1); saveData(); };
 
-            // --- 通用工具 ---
+            // --- 數據存儲工具 ---
             const saveData = () => {
                 localStorage.setItem('tripTitle', tripTitle.value);
                 localStorage.setItem('startDate', startDate.value);
@@ -426,6 +446,7 @@
 
             const refreshIcons = () => setTimeout(() => lucide.createIcons(), 50);
 
+            // 監聽所有狀態變化以刷新 Icon
             watch([activeTab, wishlistSubTab, showAddModal, showAddExpenseModal, selectedDayIndex, tripTitle, startDate, endDate], () => {
                 saveData();
                 refreshIcons();
