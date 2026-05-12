@@ -1,164 +1,169 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Okinawa Travel Master - Fix Version</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沖繩之旅 🌴</title>
     <style>
-        body { font-family: 'Noto Sans JP', sans-serif; background: #f8fafc; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-effect { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        
-        /* 修正點擊狀態：確保顏色對比明顯 */
-        .day-card-active { 
-            background-color: #0d9488 !important; 
-            color: white !important; 
-            transform: scale(1.05); 
-            box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.4); 
-            z-index: 10;
+        :root {
+            --primary-pink: #FFC1CC;
+            --soft-pink: #FFE4E8;
+            --accent-pink: #FF8DA1;
+            --white: #FFFFFF;
+            --text-color: #5A5A5A;
         }
-        .day-card-inactive {
-            background-color: #f1f5f9;
-            color: #64748b;
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, "Microsoft JhengHei", sans-serif;
+            background-color: var(--soft-pink);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
-        
-        .animate-fade { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* 解決 iOS 點擊延遲與穿透問題 */
-        .clickable { cursor: pointer; touch-action: manipulation; }
+
+        /* 標題樣式 - 膠囊型底色 */
+        header {
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .title-capsule {
+            background-color: var(--primary-pink);
+            color: var(--white);
+            padding: 10px 30px;
+            border-radius: 50px; /* 膠囊型狀 */
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: inline-block;
+        }
+
+        /* 分頁容器 (Deck Container) */
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: var(--white);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            flex-grow: 1;
+            margin-bottom: 80px; /* 為底部導航留空間 */
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 底部導航欄 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            width: 90%;
+            max-width: 500px;
+            background-color: var(--white);
+            border-radius: 50px;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 50px;
+            margin: 0 5px;
+            font-weight: bold;
+            color: var(--accent-pink);
+        }
+
+        .nav-item.active {
+            background-color: var(--primary-pink);
+            color: var(--white);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--accent-pink);
+            font-size: 20px;
+            border-bottom: 2px dashed var(--soft-pink);
+            padding-bottom: 10px;
+        }
+
+        .placeholder-text {
+            text-align: center;
+            color: #AAA;
+            margin-top: 50px;
+            font-style: italic;
+        }
     </style>
 </head>
-<body class="text-slate-800">
-    <div id="app" class="max-w-md mx-auto min-h-screen relative pb-32" @touchstart="handleGlobalTouch">
+<body>
 
-        <div v-if="currentTab === 'itinerary'" class="animate-fade">
-            <header class="p-6 pt-12 bg-white sticky top-0 z-50 shadow-sm">
-                <div class="flex justify-between items-start mb-6">
-                    <div class="flex-1 mr-4">
-                        <input v-model="tripName" placeholder="點擊命名旅程" class="text-2xl font-bold text-teal-900 bg-transparent outline-none w-full border-b border-teal-50">
-                        <div class="flex items-center gap-1 mt-3">
-                            <input type="date" v-model="startDate" class="text-[11px] bg-slate-50 p-1.5 rounded text-teal-700 outline-none border border-slate-100">
-                            <span class="text-[10px] text-slate-400">至</span>
-                            <input type="date" v-model="endDate" class="text-[11px] bg-slate-50 p-1.5 rounded text-teal-700 outline-none border border-slate-100">
-                        </div>
-                    </div>
-                    <div class="bg-teal-50 p-2.5 px-3.5 rounded-2xl flex flex-col items-center min-w-[80px] border border-teal-100 shadow-sm">
-                        <div v-if="loadingWeather" class="text-[8px] animate-pulse">更新中...</div>
-                        <template v-else-if="dayWeather">
-                            <div class="flex items-center gap-1 font-bold text-teal-700">
-                                <i v-if="dayWeather.rain > 30" data-lucide="cloud-rain" class="w-3.5 h-3.5 text-blue-500"></i>
-                                <i v-else data-lucide="sun" class="w-3.5 h-3.5 text-orange-500"></i>
-                                <span class="text-xs">{{ Math.round(dayWeather.temp) }}°C</span>
-                            </div>
-                            <span class="text-[9px] text-teal-500 font-medium">降雨 {{ Math.round(dayWeather.rain) }}%</span>
-                        </template>
-                    </div>
-                </div>
+    <header>
+        <div class="title-capsule">沖繩之旅 🌴</div>
+    </header>
 
-                <div class="flex gap-3 overflow-x-auto no-scrollbar py-2 relative">
-                    <div v-for="n in totalDays" :key="n" 
-                         :data-day="n"
-                         @click="setDay(n)"
-                         class="day-btn flex-shrink-0 w-14 h-16 rounded-2xl flex flex-col items-center justify-center transition-all clickable"
-                         :class="Number(selectedDay) === n ? 'day-card-active' : 'day-card-inactive'">
-                        <span class="text-[9px] font-bold uppercase pointer-events-none">Day</span>
-                        <span class="text-lg font-bold pointer-events-none">{{ n }}</span>
-                    </div>
-                </div>
-            </header>
-
-            <main class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ currentDayLabel }} 行程表</h2>
-                    <button @click="addPlan" class="bg-teal-600 text-white p-2.5 rounded-full shadow-lg active:scale-90 transition-transform">
-                        <i data-lucide="plus" class="w-5 h-5"></i>
-                    </button>
-                </div>
-
-                <div class="space-y-4">
-                    <div v-for="(item, index) in filteredItineraries" :key="index" class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-50 flex items-start gap-4 animate-fade">
-                        <input type="time" v-model="item.time" class="text-sm font-bold text-teal-600 pt-1 outline-none bg-transparent">
-                        <div class="flex-1">
-                            <input v-model="item.location" placeholder="要去哪裡？" class="w-full text-base font-bold outline-none mb-1 text-slate-700">
-                            <div class="flex gap-4 mt-1">
-                                <button @click="openMap(item.location)" class="text-[10px] text-slate-400 flex items-center gap-1.5 hover:text-teal-500">
-                                    <i data-lucide="map-pin" class="w-3 h-3"></i>導航
-                                </button>
-                                <button @click="removePlan(item)" class="text-[10px] text-red-300 flex items-center gap-1.5 hover:text-red-500">
-                                    <i data-lucide="trash-2" class="w-3 h-3"></i>刪除
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div v-if="filteredItineraries.length === 0" class="flex flex-col items-center justify-center py-12 text-slate-300">
-                        <i data-lucide="calendar-days" class="w-12 h-12 mb-2 opacity-20"></i>
-                        <p class="text-xs italic">Day {{ selectedDay }} 尚無行程</p>
-                    </div>
-                </div>
-            </main>
+    <div class="container">
+        <!-- 行程分頁 -->
+        <div id="tab1" class="tab-content active">
+            <h2>📍 旅行行程</h2>
+            <div class="placeholder-text">點擊下方選單切換分頁...</div>
         </div>
 
-        <nav class="fixed bottom-8 left-8 right-8 glass-effect rounded-[2.5rem] border border-white/50 shadow-2xl flex justify-around items-center p-2 z-[100]">
-            <button @click="setTab('itinerary')" :class="currentTab === 'itinerary' ? 'text-teal-600' : 'text-slate-300'" class="flex flex-col items-center p-4">
-                <i data-lucide="map" class="w-6 h-6"></i>
-                <span class="text-[10px] mt-1.5 font-black uppercase">行程</span>
-            </button>
-            </nav>
+        <!-- 記賬分頁 -->
+        <div id="tab2" class="tab-content">
+            <h2>💰 開支記賬</h2>
+            <div class="placeholder-text">準備好開始記錄花費了嗎？</div>
+        </div>
+
+        <!-- 心願分頁 -->
+        <div id="tab3" class="tab-content">
+            <h2>✨ 購物心願</h2>
+            <div class="placeholder-text">把想買的都寫下來吧！</div>
+        </div>
     </div>
 
+    <!-- 底部切換選單 -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab(1, this)">行程</div>
+        <div class="nav-item" onclick="switchTab(2, this)">記賬</div>
+        <div class="nav-item" onclick="switchTab(3, this)">心願</div>
+    </nav>
+
     <script>
-        const { createApp, ref, onMounted, computed, nextTick, watch } = Vue;
-        createApp({
-            setup() {
-                const currentTab = ref('itinerary');
-                const selectedDay = ref(1);
-                const startDate = ref('2026-05-12');
-                const endDate = ref('2026-05-16');
-                const itineraries = ref([]);
-                // ... 其他數據變量 ...
+        function switchTab(tabIndex, element) {
+            // 隱藏所有分頁內容
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
 
-                const totalDays = computed(() => {
-                    if (!startDate.value || !endDate.value) return 1;
-                    const start = new Date(startDate.value);
-                    const end = new Date(endDate.value);
-                    return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-                });
+            // 移除所有導航項目的 active 狀態
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
 
-                const setDay = (n) => {
-                    selectedDay.value = Number(n);
-                    nextTick(() => lucide.createIcons());
-                };
-
-                const filteredItineraries = computed(() => {
-                    const activeDay = Number(selectedDay.value);
-                    return itineraries.value.filter(item => Number(item.day) === activeDay);
-                });
-
-                // 【關鍵】暴力抓取點擊
-                const handleGlobalTouch = (e) => {
-                    const btn = e.target.closest('.day-btn');
-                    if (btn) {
-                        const day = btn.getAttribute('data-day');
-                        if (day) setDay(Number(day));
-                    }
-                };
-
-                onMounted(() => {
-                    lucide.createIcons();
-                });
-
-                return {
-                    currentTab, selectedDay, startDate, endDate, totalDays, setDay,
-                    filteredItineraries, handleGlobalTouch, itineraries, // 以及其他方法...
-                };
-            }
-        }).mount('#app');
+            // 顯示當前選中的分頁
+            document.getElementById('tab' + tabIndex).classList.add('active');
+            
+            // 激活當前導航按鈕
+            element.classList.add('active');
+        }
     </script>
+
 </body>
 </html>
