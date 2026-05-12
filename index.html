@@ -216,7 +216,13 @@
     });
 };
 
-                const filteredItineraries = computed(() => itineraries.value.filter(i => i.day === selectedDay.value).sort((a,b) => a.time.localeCompare(b.time)));
+                const filteredItineraries = computed(() => {
+    const dayToFilter = Number(selectedDay.value);
+    return itineraries.value
+        .filter(i => Number(i.day) === dayToFilter)
+        .sort((a, b) => a.time.localeCompare(b.time));
+});
+
 
                 const totalExpensesHKD = computed(() => (expenses.value.reduce((s, e) => s + (Number(e.amount) || 0), 0) * exchangeRate.value).toFixed(1));
                 const getCatTotal = (c) => (expenses.value.filter(e => e.category === c).reduce((s, e) => s + (Number(e.amount) || 0), 0) * exchangeRate.value).toFixed(0);
