@@ -4,248 +4,245 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>沖繩之旅 🌴</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
-        
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #FFF5F7;
-        }
-
-        /* 隱藏滾動條但保持功能 */
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #FFF5F7; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* 升級後的深粉色標題 */
         .capsule-title {
-            background-color: #FFC1CC;
+            background-color: #FF708A;
             border-radius: 999px;
-            padding: 8px 24px;
-            box-shadow: 0 4px 15px rgba(255, 193, 204, 0.4);
+            padding: 8px 28px;
+            box-shadow: 0 4px 15px rgba(255, 112, 138, 0.3);
         }
 
-        .date-pill.active {
-            background-color: #FF8DA1;
-            color: white;
-            transform: scale(1.05);
+        /* 日期小膠囊 */
+        .date-sub-capsule {
+            background-color: white;
+            border-radius: 999px;
+            padding: 4px 16px;
+            font-size: 12px;
+            color: #FF708A;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-top: 8px;
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .tab-btn.active {
-            color: #FF8DA1;
-        }
+        .date-pill.active { background-color: #FF708A; color: white; }
+        #map { height: 250px; width: 100%; border-radius: 24px; margin-bottom: 20px; z-index: 10; }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="app" class="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden">
+<div id="app" class="max-w-md mx-auto min-h-screen pb-28 relative overflow-x-hidden">
     
-    <!-- Header -->
-    <header class="flex justify-center py-6">
+    <!-- Header 與 日期標示 -->
+    <header class="flex flex-col items-center py-6">
         <div class="capsule-title text-white font-bold text-xl flex items-center gap-2">
             <span>沖繩之旅</span> 🌴
         </div>
+        <div class="date-sub-capsule">
+            {{ startDate }} ~ {{ endDate }} ‧ 共 {{ totalDays }} 天
+        </div>
     </header>
 
-    <!-- 主內容區 -->
     <main class="px-4">
-        
-        <!-- 行程分頁內容 -->
         <div v-if="activeTab === 'itinerary'">
             <!-- 橫向滑動日期選單 -->
             <div class="flex overflow-x-auto gap-3 py-4 hide-scrollbar snap-x">
-                <div v-for="(day, index) in itineraryDays" :key="index"
-                     @click="selectedDayIndex = index"
+                <div v-for="n in totalDays" :key="n"
+                     @click="selectedDayIndex = n-1"
                      class="date-pill flex-shrink-0 w-16 h-20 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center transition-all cursor-pointer snap-start"
-                     :class="{ 'active': selectedDayIndex === index }">
+                     :class="{ 'active': selectedDayIndex === n-1 }">
                     <span class="text-xs opacity-70">Day</span>
-                    <span class="text-xl font-bold">{{ index + 1 }}</span>
+                    <span class="text-xl font-bold">{{ n }}</span>
                 </div>
-                <!-- 新增天數按鈕 -->
-                <button @click="addDay" class="flex-shrink-0 w-16 h-20 rounded-2xl bg-pink-100 border-2 border-dashed border-pink-300 flex items-center justify-center text-pink-400">
-                    <i data-lucide="plus"></i>
+            </div>
+
+            <!-- 互動式地圖區域 -->
+            <div class="relative">
+                <div id="map" class="shadow-inner"></div>
+                <button @click="locateUser" class="absolute bottom-8 right-4 z-[1000] bg-white p-2 rounded-full shadow-lg text-blue-500">
+                    <i data-lucide="locate-fixed"></i>
                 </button>
             </div>
 
-            <!-- 當日天氣概況 (沖繩那霸) -->
-            <div class="glass-card rounded-3xl p-4 mb-6 flex items-center justify-between shadow-sm border-l-4 border-pink-300">
+            <!-- 天氣資訊 -->
+            <div class="bg-white/60 rounded-3xl p-4 mb-6 flex items-center justify-between shadow-sm border border-white">
                 <div class="flex items-center gap-3">
                     <img :src="`https://openweathermap.org/img/wn/${weather.icon}@2x.png`" class="w-12 h-12" alt="Weather">
                     <div>
-                        <p class="text-sm text-gray-500">今日沖繩天氣</p>
+                        <p class="text-sm text-gray-500">今日沖繩</p>
                         <p class="font-bold text-gray-700">{{ weather.temp }}°C - {{ weather.description }}</p>
                     </div>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs text-pink-400 font-medium">適合穿著：短袖+薄外套</p>
                 </div>
             </div>
 
             <!-- 行程清單 -->
             <div class="space-y-4">
-                <div v-for="(item, idx) in currentDayItems" :key="idx" 
-                     class="bg-white rounded-3xl p-4 shadow-sm flex gap-4 items-start relative group">
+                <div v-for="(item, idx) in itineraryDays[selectedDayIndex]" :key="idx" 
+                     class="bg-white rounded-3xl p-4 shadow-sm flex gap-4 items-start border border-pink-50">
                     <div class="flex flex-col items-center">
-                        <span class="text-sm font-bold text-pink-400">{{ item.time }}</span>
-                        <div class="w-0.5 h-12 bg-pink-100 my-1"></div>
+                        <span class="text-sm font-bold text-pink-500">{{ item.time }}</span>
+                        <div class="w-0.5 h-12 bg-pink-50 my-1"></div>
                     </div>
                     <div class="flex-grow">
                         <h3 class="font-bold text-gray-800">{{ item.location }}</h3>
                         <p class="text-xs text-gray-400 mb-2">{{ item.note }}</p>
                         <div class="flex gap-2">
-                            <button @click="openNavigation(item.location)" class="text-[10px] bg-blue-50 text-blue-500 px-3 py-1 rounded-full flex items-center gap-1">
-                                <i data-lucide="map-pin" class="w-3 h-3"></i> 導航
+                            <button @click="openExternalNav(item.location)" class="text-[10px] bg-blue-50 text-blue-500 px-3 py-1 rounded-full flex items-center gap-1">
+                                <i data-lucide="external-link" class="w-3 h-3"></i> 導航
                             </button>
-                            <button @click="removeItem(idx)" class="text-[10px] bg-red-50 text-red-400 px-3 py-1 rounded-full">
-                                刪除
-                            </button>
+                            <button @click="removeItem(idx)" class="text-[10px] bg-red-50 text-red-400 px-3 py-1 rounded-full">刪除</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 新增行程按鈕 -->
-                <button @click="showAddModal = true" class="w-full py-4 rounded-3xl border-2 border-dashed border-pink-200 text-pink-300 font-medium flex justify-center items-center gap-2 hover:bg-pink-50 transition-colors">
-                    <i data-lucide="plus-circle"></i> 新增行程點
+                <button @click="showAddModal = true" class="w-full py-4 rounded-3xl border-2 border-dashed border-pink-200 text-pink-300 font-medium flex justify-center items-center gap-2">
+                    <i data-lucide="plus-circle"></i> 新增行程
                 </button>
             </div>
         </div>
 
-        <!-- 記賬 & 心願預留區 (暫不顯示詳細功能) -->
-        <div v-else class="flex flex-col items-center mt-20 text-gray-400">
-            <i data-lucide="construction" class="w-12 h-12 mb-4"></i>
-            <p>這部分功能開發中 ✨</p>
+        <!-- 預留分頁 -->
+        <div v-else class="flex flex-col items-center mt-20 text-gray-300">
+            <i data-lucide="sparkles" class="w-12 h-12 mb-2"></i>
+            <p>即將解鎖...</p>
         </div>
     </main>
 
-    <!-- 新增行程彈窗 -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-end z-50">
-        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up">
-            <h2 class="text-xl font-bold mb-6 text-gray-700">新增行程</h2>
-            <div class="space-y-4">
-                <input v-model="newItem.time" type="time" class="w-full p-4 bg-pink-50 rounded-2xl outline-none" placeholder="時間">
-                <input v-model="newItem.location" type="text" class="w-full p-4 bg-pink-50 rounded-2xl outline-none" placeholder="目的地（如：首里城）">
-                <input v-model="newItem.note" type="text" class="w-full p-4 bg-pink-50 rounded-2xl outline-none" placeholder="備註（選填）">
-                <div class="flex gap-3 pt-4">
-                    <button @click="showAddModal = false" class="flex-1 py-4 text-gray-400 font-bold">取消</button>
-                    <button @click="addItem" class="flex-1 py-4 bg-pink-300 text-white rounded-2xl font-bold shadow-lg shadow-pink-200">確定新增</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 底部導航欄 -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/90 backdrop-blur-md h-16 rounded-full shadow-2xl flex items-center justify-around px-6 z-40 border border-pink-50">
+    <!-- 底部選單 -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/90 backdrop-blur-md h-16 rounded-full shadow-2xl flex items-center justify-around px-6 z-40">
         <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
                 class="flex flex-col items-center gap-1 transition-all"
-                :class="activeTab === tab.id ? 'text-pink-400 scale-110' : 'text-gray-300'">
+                :class="activeTab === tab.id ? 'text-pink-500 scale-110' : 'text-gray-300'">
             <i :data-lucide="tab.icon" class="w-6 h-6"></i>
             <span class="text-[10px] font-bold">{{ tab.name }}</span>
         </button>
     </nav>
+
+    <!-- 新增彈窗 -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/40 flex items-end z-[2000]">
+        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up shadow-2xl">
+            <h2 class="text-xl font-bold mb-6 text-gray-700">在哪裡見面呢？</h2>
+            <div class="space-y-4">
+                <input v-model="newItem.time" type="time" class="w-full p-4 bg-gray-50 rounded-2xl outline-none">
+                <input v-model="newItem.location" type="text" class="w-full p-4 bg-gray-50 rounded-2xl outline-none" placeholder="目的地名稱">
+                <div class="flex gap-3 pt-4">
+                    <button @click="showAddModal = false" class="flex-1 py-4 text-gray-400 font-bold">取消</button>
+                    <button @click="addItem" class="flex-1 py-4 bg-pink-500 text-white rounded-2xl font-bold shadow-lg shadow-pink-200">添加行程</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    const { createApp, ref, computed, onMounted } = Vue;
+    const { createApp, ref, computed, onMounted, watch } = Vue;
 
     createApp({
         setup() {
+            const startDate = ref('2026/06/15');
+            const endDate = ref('2026/06/19');
+            const totalDays = ref(5);
             const activeTab = ref('itinerary');
             const selectedDayIndex = ref(0);
             const showAddModal = ref(false);
             const weather = ref({ temp: '--', description: '載入中', icon: '01d' });
             
-            const itineraryDays = ref([
-                [
-                    { time: '10:00', location: '那霸機場', note: '抵達並領取租車' },
-                    { time: '12:30', location: '首里城', note: '歷史文化參觀' }
-                ],
-                []
-            ]);
+            // 初始化行程數據
+            const itineraryDays = ref(Array.from({length: totalDays.value}, () => []));
+            itineraryDays.value[0] = [
+                { time: '10:00', location: '那霸機場', lat: 26.2064, lng: 127.6465 },
+                { time: '13:00', location: '波上宮', lat: 26.2208, lng: 127.6711 }
+            ];
 
             const newItem = ref({ time: '12:00', location: '', note: '' });
-
             const tabs = [
                 { id: 'itinerary', name: '行程', icon: 'map' },
                 { id: 'billing', name: '記賬', icon: 'wallet' },
                 { id: 'wishlist', name: '心願', icon: 'heart' }
             ];
 
-            const currentDayItems = computed(() => itineraryDays.value[selectedDayIndex.value]);
+            let map, markerGroup;
 
-            // 抓取天氣數據 (以那霸市為例)
-            const fetchWeather = async () => {
-                try {
-                    // 這裡使用一個測試用的免費 API Key 或示例，實務上請換成自己的 OpenWeather API Key
-                    const API_KEY = 'bd5e378503939ddaee76f12ad7a97608'; 
-                    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Naha,jp&units=metric&lang=zh_tw&appid=${API_KEY}`);
-                    const data = await res.json();
-                    weather.value = {
-                        temp: Math.round(data.main.temp),
-                        description: data.weather[0].description,
-                        icon: data.weather[0].icon
-                    };
-                } catch (e) {
-                    console.error("天氣獲取失敗", e);
+            const initMap = () => {
+                map = L.map('map', { zoomControl: false }).setView([26.2124, 127.6809], 12);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '©OpenStreetMap'
+                }).addTo(map);
+                markerGroup = L.layerGroup().addTo(map);
+                updateMapMarkers();
+            };
+
+            const updateMapMarkers = async () => {
+                if (!markerGroup) return;
+                markerGroup.clearLayers();
+                const items = itineraryDays.value[selectedDayIndex.value];
+                
+                for (const item of items) {
+                    // 這裡簡化處理：如果沒有經緯度，模擬一個隨機位址（實務上可串接 Geocoding）
+                    const lat = item.lat || 26.2124 + (Math.random() - 0.5) * 0.1;
+                    const lng = item.lng || 127.6809 + (Math.random() - 0.5) * 0.1;
+                    L.marker([lat, lng]).addTo(markerGroup).bindPopup(item.location);
                 }
             };
 
-            const addDay = () => itineraryDays.value.push([]);
-            
+            const locateUser = () => {
+                map.locate({setView: true, maxZoom: 14});
+                map.on('locationfound', (e) => {
+                    L.circle(e.latlng, e.accuracy).addTo(map);
+                    L.marker(e.latlng).addTo(map).bindPopup("你在這裡！").openPopup();
+                });
+            };
+
+            const fetchWeather = async () => {
+                const API_KEY = 'bd5e378503939ddaee76f12ad7a97608'; 
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Naha,jp&units=metric&lang=zh_tw&appid=${API_KEY}`);
+                const data = await res.json();
+                weather.value = { temp: Math.round(data.main.temp), description: data.weather[0].description, icon: data.weather[0].icon };
+            };
+
             const addItem = () => {
                 if (!newItem.value.location) return;
                 itineraryDays.value[selectedDayIndex.value].push({ ...newItem.value });
                 itineraryDays.value[selectedDayIndex.value].sort((a, b) => a.time.localeCompare(b.time));
                 showAddModal.value = false;
                 newItem.value = { time: '12:00', location: '', note: '' };
-                setTimeout(() => lucide.createIcons(), 0);
+                updateMapMarkers();
             };
 
             const removeItem = (idx) => {
                 itineraryDays.value[selectedDayIndex.value].splice(idx, 1);
+                updateMapMarkers();
             };
 
-            const openNavigation = (location) => {
-                // 自動跳轉至 Google Maps 導航
-                window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location + ' 沖繩')}`, '_blank');
-            };
+            const openExternalNav = (loc) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc + ' 沖繩')}`);
+
+            watch(selectedDayIndex, () => updateMapMarkers());
 
             onMounted(() => {
                 lucide.createIcons();
                 fetchWeather();
+                setTimeout(initMap, 500); // 確保 DOM 渲染後載入地圖
             });
 
             return {
-                activeTab, tabs, itineraryDays, selectedDayIndex, currentDayItems,
-                showAddModal, newItem, addDay, addItem, removeItem, openNavigation, weather
+                startDate, endDate, totalDays, activeTab, tabs, itineraryDays, selectedDayIndex,
+                showAddModal, newItem, addItem, removeItem, openExternalNav, weather, locateUser
             };
         }
     }).mount('#app');
-
-    // 監控 Vue 渲染後的圖示更新
-    window.addEventListener('click', () => {
-        setTimeout(() => lucide.createIcons(), 10);
-    });
 </script>
-
-<style>
-    @keyframes slide-up {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
-    }
-    .animate-slide-up {
-        animation: slide-up 0.3s ease-out;
-    }
-</style>
-
 </body>
 </html>
