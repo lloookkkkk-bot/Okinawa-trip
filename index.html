@@ -71,9 +71,6 @@
             box-shadow: 4px 4px 0px var(--dark-line);
         }
 
-        .postcard { background-color: var(--paper-color); border: 3px solid var(--dark-line); border-radius: 32px; position: relative; }
-        .postcard-stamp { width: 60px; height: 60px; border: 3px solid var(--title-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--title-color); font-weight: 900; font-size: 10px; transform: rotate(-15deg); opacity: 0.6; }
-
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 
@@ -221,15 +218,12 @@
                     <input v-model="newPlaceText" placeholder="景點名稱..." class="flex-grow p-4 bg-white border-2 border-[#4A4A4A] rounded-2xl text-sm font-bold outline-none shadow-[3px_3px_0px_#4A4A4A]">
                     <button @click="addWishPlace" class="bg-[#B5495B] border-2 border-[#4A4A4A] text-white px-5 rounded-2xl shadow-[3px_3px_0px_#4A4A4A] active:translate-y-0.5"><i data-lucide="map-pin"></i></button>
                 </div>
-                <div v-for="(place, idx) in wishlistPlaces" :key="idx" @click="openGuide(place.name)" class="washi-card p-5 flex justify-between items-center cursor-pointer">
+                <div v-for="(place, idx) in wishlistPlaces" :key="idx" class="washi-card p-5 flex justify-between items-center">
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 bg-[#E0F2FE] rounded-2xl border-2 border-[#4A4A4A] flex items-center justify-center text-2xl shadow-[3px_3px_0px_#4A4A4A]">🏝️</div>
-                        <div>
-                            <h4 class="font-black text-gray-800 text-lg">{{ place.name }}</h4>
-                            <p class="text-[10px] text-pink-500 font-black">✨ 查看攻略</p>
-                        </div>
+                        <h4 class="font-black text-gray-800 text-lg">{{ place.name }}</h4>
                     </div>
-                    <div class="flex gap-2" @click.stop>
+                    <div class="flex gap-2">
                         <button @click="openNav(place.name)" class="p-3 bg-blue-50 border-2 border-[#4A4A4A] rounded-full text-blue-500 shadow-[2px_2px_0px_#4A4A4A]"><i data-lucide="navigation" class="w-4 h-4"></i></button>
                         <button @click="removePlace(idx)" class="p-3 bg-white border-2 border-red-100 rounded-full text-red-300"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
@@ -285,36 +279,13 @@
             </div>
         </div>
     </div>
-
-    <!-- 攻略明信片彈窗 (內容由 Script 生成) -->
-    <div v-if="selectedGuide" class="fixed inset-0 bg-black/60 z-[200] backdrop-blur-sm flex items-center justify-center p-6" @click="selectedGuide = null">
-        <div class="postcard w-full max-h-[85vh] flex flex-col shadow-[10px_10px_0px_rgba(0,0,0,0.2)]" @click.stop>
-            <div class="p-6 border-b-4 border-dashed border-gray-200 flex justify-between items-start">
-                <div>
-                    <h2 class="text-3xl font-black text-gray-800">OKINAWA</h2>
-                    <p class="text-[10px] font-bold text-gray-400">GUIDE NOTE 2026</p>
-                </div>
-                <div class="postcard-stamp">沖繩</div>
-            </div>
-            <div class="p-7 overflow-y-auto hide-scrollbar space-y-6">
-                <h3 class="text-center text-xl font-black border-b-2 border-[#4A4A4A] pb-2">📍 {{ selectedGuide.name }}</h3>
-                <section><h4 class="font-black text-[#DB4D6D] text-sm mb-1">景點介紹</h4><p class="text-xs bg-white border-2 border-[#4A4A4A] p-3 rounded-xl">{{ selectedGuide.intro }}</p></section>
-                <div class="grid grid-cols-2 gap-3">
-                    <section class="bg-[#FFF9E5] border-2 border-[#4A4A4A] p-3 rounded-2xl"><h4 class="font-black text-orange-600 text-[10px]">🍱 必吃</h4><p class="text-[9px]">{{ selectedGuide.food }}</p></section>
-                    <section class="bg-[#F3F0FF] border-2 border-[#4A4A4A] p-3 rounded-2xl"><h4 class="font-black text-purple-600 text-[10px]">🎁 必買</h4><p class="text-[9px]">{{ selectedGuide.souvenir }}</p></section>
-                </div>
-                <section class="bg-blue-50 border-2 border-[#4A4A4A] p-3 rounded-2xl"><h4 class="font-black text-blue-600 text-sm mb-1">📸 打卡位</h4><p class="text-[10px]">{{ selectedGuide.photoSpot }}</p></section>
-            </div>
-            <button @click="selectedGuide = null" class="m-6 py-4 bg-[#4A4A4A] text-white rounded-2xl font-black shadow-[4px_4px_0px_rgba(0,0,0,0.3)]">關閉</button>
-        </div>
-    </div>
 </div>
 <script>
     const { createApp, ref, computed, onMounted, watch } = Vue;
 
     createApp({
         setup() {
-            // --- 基礎配置 ---
+            // --- 基礎配置與持久化 ---
             const activeTab = ref('itinerary');
             const tripTitle = ref(localStorage.getItem('tripTitle') || '沖繩之旅 🎏');
             const startDate = ref(localStorage.getItem('startDate') || '2026-06-15');
@@ -341,7 +312,7 @@
             const clothingAdvice = computed(() => {
                 const t = parseInt(weather.value.temp);
                 if (isNaN(t)) return "獲取中...";
-                return t > 25 ? "穿短袖吧" : "帶件薄外套";
+                return t > 25 ? "穿短袖吧" : "建議帶件薄外套";
             });
 
             const fetchWeather = async () => {
@@ -352,8 +323,10 @@
                 } catch(e) { weather.value.description = "連線失敗"; }
             };
 
-            // --- 行程管理 ---
+            // --- 行程與記帳公用天數索引 ---
             const selectedDayIndex = ref(0);
+
+            // --- 行程邏輯 ---
             const showAddModal = ref(false);
             const itineraryData = ref(JSON.parse(localStorage.getItem('itineraryData')) || {}); 
             const newItem = ref({ time: '09:00', location: '', note: '' });
@@ -375,8 +348,8 @@
                 saveData();
             };
 
-            // --- 記帳管理 (精簡分類) ---
-            const exchangeRate = ref(0.051); // JPY to HKD
+            // --- 記帳邏輯 (食物/購物/其他) ---
+            const exchangeRate = ref(0.051); 
             const showAddExpenseModal = ref(false);
             const expensesData = ref(JSON.parse(localStorage.getItem('expensesData')) || {}); 
             const newExpense = ref({ item: '', amount: null, category: '🍽️ 食物' });
@@ -412,13 +385,12 @@
 
             const getCategoryIcon = (cat) => cat === '🍽️ 食物' ? '🍙' : (cat === '🛍️ 購物' ? '🛍️' : '🔍');
 
-            // --- 心願清單 ---
+            // --- 心願清單邏輯 ---
             const wishlistSubTab = ref('items');
             const wishlistItems = ref(JSON.parse(localStorage.getItem('wishlistItems')) || []);
             const wishlistPlaces = ref(JSON.parse(localStorage.getItem('wishlistPlaces')) || []);
             const newWishText = ref('');
             const newPlaceText = ref('');
-            const selectedGuide = ref(null);
 
             const addWishItem = () => {
                 if (!newWishText.value) return;
@@ -437,16 +409,6 @@
             const removeWishItem = (idx) => { wishlistItems.value.splice(idx, 1); saveData(); };
             const removePlace = (idx) => { wishlistPlaces.value.splice(idx, 1); saveData(); };
 
-            const openGuide = (name) => {
-                selectedGuide.value = {
-                    name: name,
-                    intro: `${name} 是沖繩非常熱門的地點，景色宜人。`,
-                    food: "沖繩蕎麥麵、海葡萄、雪鹽霜淇淋",
-                    souvenir: "紅芋塔、黑糖製品、琉球玻璃工藝",
-                    photoSpot: "建築物正面、靠海的觀景台或日落時分的沙灘。"
-                };
-            };
-
             // --- 通用工具 ---
             const saveData = () => {
                 localStorage.setItem('tripTitle', tripTitle.value);
@@ -464,7 +426,10 @@
 
             const refreshIcons = () => setTimeout(() => lucide.createIcons(), 50);
 
-            watch([activeTab, wishlistSubTab, showAddModal, showAddExpenseModal, selectedDayIndex], () => refreshIcons());
+            watch([activeTab, wishlistSubTab, showAddModal, showAddExpenseModal, selectedDayIndex, tripTitle, startDate, endDate], () => {
+                saveData();
+                refreshIcons();
+            });
 
             onMounted(() => {
                 fetchWeather();
@@ -476,7 +441,7 @@
                 weather, clothingAdvice,
                 selectedDayIndex, showAddModal, newItem, currentItinerary, addItem, removeItem,
                 exchangeRate, showAddExpenseModal, newExpense, dailyExpenses, totalExpenses, categoryTotals, addExpense, removeExpense, getCategoryIcon,
-                wishlistSubTab, wishlistItems, wishlistPlaces, newWishText, newPlaceText, selectedGuide, addWishItem, addWishPlace, removeWishItem, removePlace, openGuide,
+                wishlistSubTab, wishlistItems, wishlistPlaces, newWishText, newPlaceText, addWishItem, addWishPlace, removeWishItem, removePlace,
                 openNav
             };
         }
