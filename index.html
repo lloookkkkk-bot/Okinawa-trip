@@ -4,166 +4,248 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>沖繩之旅 🌴</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --primary-pink: #FFC1CC;
-            --soft-pink: #FFE4E8;
-            --accent-pink: #FF8DA1;
-            --white: #FFFFFF;
-            --text-color: #5A5A5A;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, "Microsoft JhengHei", sans-serif;
-            background-color: var(--soft-pink);
-            color: var(--text-color);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #FFF5F7;
         }
 
-        /* 標題樣式 - 膠囊型底色 */
-        header {
-            margin-top: 30px;
-            margin-bottom: 20px;
+        /* 隱藏滾動條但保持功能 */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .capsule-title {
+            background-color: #FFC1CC;
+            border-radius: 999px;
+            padding: 8px 24px;
+            box-shadow: 0 4px 15px rgba(255, 193, 204, 0.4);
         }
 
-        .title-capsule {
-            background-color: var(--primary-pink);
-            color: var(--white);
-            padding: 10px 30px;
-            border-radius: 50px; /* 膠囊型狀 */
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            display: inline-block;
+        .date-pill.active {
+            background-color: #FF8DA1;
+            color: white;
+            transform: scale(1.05);
         }
 
-        /* 分頁容器 (Deck Container) */
-        .container {
-            width: 90%;
-            max-width: 500px;
-            background: var(--white);
-            border-radius: 25px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            flex-grow: 1;
-            margin-bottom: 80px; /* 為底部導航留空間 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 底部導航欄 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 20px;
-            width: 90%;
-            max-width: 500px;
-            background-color: var(--white);
-            border-radius: 50px;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px 0;
-            cursor: pointer;
-            transition: all 0.3s;
-            border-radius: 50px;
-            margin: 0 5px;
-            font-weight: bold;
-            color: var(--accent-pink);
-        }
-
-        .nav-item.active {
-            background-color: var(--primary-pink);
-            color: var(--white);
-        }
-
-        h2 {
-            text-align: center;
-            color: var(--accent-pink);
-            font-size: 20px;
-            border-bottom: 2px dashed var(--soft-pink);
-            padding-bottom: 10px;
-        }
-
-        .placeholder-text {
-            text-align: center;
-            color: #AAA;
-            margin-top: 50px;
-            font-style: italic;
+        .tab-btn.active {
+            color: #FF8DA1;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="title-capsule">沖繩之旅 🌴</div>
+<div id="app" class="max-w-md mx-auto min-h-screen pb-24 relative overflow-x-hidden">
+    
+    <!-- Header -->
+    <header class="flex justify-center py-6">
+        <div class="capsule-title text-white font-bold text-xl flex items-center gap-2">
+            <span>沖繩之旅</span> 🌴
+        </div>
     </header>
 
-    <div class="container">
-        <!-- 行程分頁 -->
-        <div id="tab1" class="tab-content active">
-            <h2>📍 旅行行程</h2>
-            <div class="placeholder-text">點擊下方選單切換分頁...</div>
+    <!-- 主內容區 -->
+    <main class="px-4">
+        
+        <!-- 行程分頁內容 -->
+        <div v-if="activeTab === 'itinerary'">
+            <!-- 橫向滑動日期選單 -->
+            <div class="flex overflow-x-auto gap-3 py-4 hide-scrollbar snap-x">
+                <div v-for="(day, index) in itineraryDays" :key="index"
+                     @click="selectedDayIndex = index"
+                     class="date-pill flex-shrink-0 w-16 h-20 rounded-2xl bg-white shadow-sm flex flex-col items-center justify-center transition-all cursor-pointer snap-start"
+                     :class="{ 'active': selectedDayIndex === index }">
+                    <span class="text-xs opacity-70">Day</span>
+                    <span class="text-xl font-bold">{{ index + 1 }}</span>
+                </div>
+                <!-- 新增天數按鈕 -->
+                <button @click="addDay" class="flex-shrink-0 w-16 h-20 rounded-2xl bg-pink-100 border-2 border-dashed border-pink-300 flex items-center justify-center text-pink-400">
+                    <i data-lucide="plus"></i>
+                </button>
+            </div>
+
+            <!-- 當日天氣概況 (沖繩那霸) -->
+            <div class="glass-card rounded-3xl p-4 mb-6 flex items-center justify-between shadow-sm border-l-4 border-pink-300">
+                <div class="flex items-center gap-3">
+                    <img :src="`https://openweathermap.org/img/wn/${weather.icon}@2x.png`" class="w-12 h-12" alt="Weather">
+                    <div>
+                        <p class="text-sm text-gray-500">今日沖繩天氣</p>
+                        <p class="font-bold text-gray-700">{{ weather.temp }}°C - {{ weather.description }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-pink-400 font-medium">適合穿著：短袖+薄外套</p>
+                </div>
+            </div>
+
+            <!-- 行程清單 -->
+            <div class="space-y-4">
+                <div v-for="(item, idx) in currentDayItems" :key="idx" 
+                     class="bg-white rounded-3xl p-4 shadow-sm flex gap-4 items-start relative group">
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm font-bold text-pink-400">{{ item.time }}</span>
+                        <div class="w-0.5 h-12 bg-pink-100 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <h3 class="font-bold text-gray-800">{{ item.location }}</h3>
+                        <p class="text-xs text-gray-400 mb-2">{{ item.note }}</p>
+                        <div class="flex gap-2">
+                            <button @click="openNavigation(item.location)" class="text-[10px] bg-blue-50 text-blue-500 px-3 py-1 rounded-full flex items-center gap-1">
+                                <i data-lucide="map-pin" class="w-3 h-3"></i> 導航
+                            </button>
+                            <button @click="removeItem(idx)" class="text-[10px] bg-red-50 text-red-400 px-3 py-1 rounded-full">
+                                刪除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增行程按鈕 -->
+                <button @click="showAddModal = true" class="w-full py-4 rounded-3xl border-2 border-dashed border-pink-200 text-pink-300 font-medium flex justify-center items-center gap-2 hover:bg-pink-50 transition-colors">
+                    <i data-lucide="plus-circle"></i> 新增行程點
+                </button>
+            </div>
         </div>
 
-        <!-- 記賬分頁 -->
-        <div id="tab2" class="tab-content">
-            <h2>💰 開支記賬</h2>
-            <div class="placeholder-text">準備好開始記錄花費了嗎？</div>
+        <!-- 記賬 & 心願預留區 (暫不顯示詳細功能) -->
+        <div v-else class="flex flex-col items-center mt-20 text-gray-400">
+            <i data-lucide="construction" class="w-12 h-12 mb-4"></i>
+            <p>這部分功能開發中 ✨</p>
         </div>
+    </main>
 
-        <!-- 心願分頁 -->
-        <div id="tab3" class="tab-content">
-            <h2>✨ 購物心願</h2>
-            <div class="placeholder-text">把想買的都寫下來吧！</div>
+    <!-- 新增行程彈窗 -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-end z-50">
+        <div class="bg-white w-full rounded-t-[40px] p-8 animate-slide-up">
+            <h2 class="text-xl font-bold mb-6 text-gray-700">新增行程</h2>
+            <div class="space-y-4">
+                <input v-model="newItem.time" type="time" class="w-full p-4 bg-pink-50 rounded-2xl outline-none" placeholder="時間">
+                <input v-model="newItem.location" type="text" class="w-full p-4 bg-pink-50 rounded-2xl outline-none" placeholder="目的地（如：首里城）">
+                <input v-model="newItem.note" type="text" class="w-full p-4 bg-pink-50 rounded-2xl outline-none" placeholder="備註（選填）">
+                <div class="flex gap-3 pt-4">
+                    <button @click="showAddModal = false" class="flex-1 py-4 text-gray-400 font-bold">取消</button>
+                    <button @click="addItem" class="flex-1 py-4 bg-pink-300 text-white rounded-2xl font-bold shadow-lg shadow-pink-200">確定新增</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 底部切換選單 -->
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab(1, this)">行程</div>
-        <div class="nav-item" onclick="switchTab(2, this)">記賬</div>
-        <div class="nav-item" onclick="switchTab(3, this)">心願</div>
+    <!-- 底部導航欄 -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/90 backdrop-blur-md h-16 rounded-full shadow-2xl flex items-center justify-around px-6 z-40 border border-pink-50">
+        <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
+                class="flex flex-col items-center gap-1 transition-all"
+                :class="activeTab === tab.id ? 'text-pink-400 scale-110' : 'text-gray-300'">
+            <i :data-lucide="tab.icon" class="w-6 h-6"></i>
+            <span class="text-[10px] font-bold">{{ tab.name }}</span>
+        </button>
     </nav>
+</div>
 
-    <script>
-        function switchTab(tabIndex, element) {
-            // 隱藏所有分頁內容
-            const contents = document.querySelectorAll('.tab-content');
-            contents.forEach(content => content.classList.remove('active'));
+<script>
+    const { createApp, ref, computed, onMounted } = Vue;
 
-            // 移除所有導航項目的 active 狀態
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => item.classList.remove('active'));
-
-            // 顯示當前選中的分頁
-            document.getElementById('tab' + tabIndex).classList.add('active');
+    createApp({
+        setup() {
+            const activeTab = ref('itinerary');
+            const selectedDayIndex = ref(0);
+            const showAddModal = ref(false);
+            const weather = ref({ temp: '--', description: '載入中', icon: '01d' });
             
-            // 激活當前導航按鈕
-            element.classList.add('active');
+            const itineraryDays = ref([
+                [
+                    { time: '10:00', location: '那霸機場', note: '抵達並領取租車' },
+                    { time: '12:30', location: '首里城', note: '歷史文化參觀' }
+                ],
+                []
+            ]);
+
+            const newItem = ref({ time: '12:00', location: '', note: '' });
+
+            const tabs = [
+                { id: 'itinerary', name: '行程', icon: 'map' },
+                { id: 'billing', name: '記賬', icon: 'wallet' },
+                { id: 'wishlist', name: '心願', icon: 'heart' }
+            ];
+
+            const currentDayItems = computed(() => itineraryDays.value[selectedDayIndex.value]);
+
+            // 抓取天氣數據 (以那霸市為例)
+            const fetchWeather = async () => {
+                try {
+                    // 這裡使用一個測試用的免費 API Key 或示例，實務上請換成自己的 OpenWeather API Key
+                    const API_KEY = 'bd5e378503939ddaee76f12ad7a97608'; 
+                    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Naha,jp&units=metric&lang=zh_tw&appid=${API_KEY}`);
+                    const data = await res.json();
+                    weather.value = {
+                        temp: Math.round(data.main.temp),
+                        description: data.weather[0].description,
+                        icon: data.weather[0].icon
+                    };
+                } catch (e) {
+                    console.error("天氣獲取失敗", e);
+                }
+            };
+
+            const addDay = () => itineraryDays.value.push([]);
+            
+            const addItem = () => {
+                if (!newItem.value.location) return;
+                itineraryDays.value[selectedDayIndex.value].push({ ...newItem.value });
+                itineraryDays.value[selectedDayIndex.value].sort((a, b) => a.time.localeCompare(b.time));
+                showAddModal.value = false;
+                newItem.value = { time: '12:00', location: '', note: '' };
+                setTimeout(() => lucide.createIcons(), 0);
+            };
+
+            const removeItem = (idx) => {
+                itineraryDays.value[selectedDayIndex.value].splice(idx, 1);
+            };
+
+            const openNavigation = (location) => {
+                // 自動跳轉至 Google Maps 導航
+                window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location + ' 沖繩')}`, '_blank');
+            };
+
+            onMounted(() => {
+                lucide.createIcons();
+                fetchWeather();
+            });
+
+            return {
+                activeTab, tabs, itineraryDays, selectedDayIndex, currentDayItems,
+                showAddModal, newItem, addDay, addItem, removeItem, openNavigation, weather
+            };
         }
-    </script>
+    }).mount('#app');
+
+    // 監控 Vue 渲染後的圖示更新
+    window.addEventListener('click', () => {
+        setTimeout(() => lucide.createIcons(), 10);
+    });
+</script>
+
+<style>
+    @keyframes slide-up {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    .animate-slide-up {
+        animation: slide-up 0.3s ease-out;
+    }
+</style>
 
 </body>
 </html>
