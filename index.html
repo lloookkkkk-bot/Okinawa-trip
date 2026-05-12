@@ -149,14 +149,27 @@
         </div>
 
 
-        <!-- 底部導覽 -->
+          <!-- 底部導覽 -->
         <nav class="fixed bottom-6 left-6 right-6 glass-effect rounded-[2.5rem] border border-white/50 shadow-2xl flex justify-around items-center p-2 z-50">
+            
+            <!-- 1. 行程按鈕 -->
             <button @click="setTab('itinerary')" :class="currentTab === 'itinerary' ? 'text-teal-600' : 'text-slate-300'" class="flex flex-col items-center p-3">
-                <i data-lucide="calendar" class="w-6 h-6"></i><span class="text-[9px] mt-1 font-bold">行程</span>
+                <i data-lucide="calendar" class="w-6 h-6"></i>
+                <span class="text-[9px] mt-1 font-bold">行程</span>
             </button>
+
+            <!-- 2. 記帳按鈕 -->
             <button @click="setTab('finance')" :class="currentTab === 'finance' ? 'text-teal-600' : 'text-slate-300'" class="flex flex-col items-center p-3">
-                <i data-lucide="banknote" class="w-6 h-6"></i><span class="text-[9px] mt-1 font-bold">記帳</span>
+                <i data-lucide="banknote" class="w-6 h-6"></i>
+                <span class="text-[9px] mt-1 font-bold">記帳</span>
             </button>
+
+            <!-- 3. 心願按鈕 (請把原本那個 opacity-30 的替換成這段) 🚀 -->
+            <button @click="setTab('wishlist')" :class="currentTab === 'wishlist' ? 'text-teal-600' : 'text-slate-300'" class="flex flex-col items-center p-3">
+                <i data-lucide="stars" class="w-6 h-6"></i>
+                <span class="text-[9px] mt-1 font-bold">心願</span>
+            </button>
+
         </nav>
     </div>
 
@@ -234,7 +247,7 @@
                 return {
                     currentTab, selectedDay, tripName, startDate, endDate, totalDays, currentDayLabel,
                     itineraries, filteredItineraries, expenses, totalExpensesHKD, getCatTotal,
-                    loadingWeather, dayWeather, setTab, addPlan, removePlan, addExpense, openMap, exchangeRate
+                    loadingWeather, dayWeather, setTab, addPlan, removePlan, addExpense, openMap, exchangeRate, wishTab, spots, wishlistItems, addWishItem
                 };
             }
         }).mount('#app');
